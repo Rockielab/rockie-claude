@@ -392,7 +392,7 @@ assert "pre-commit-gate: missing sentinel → block (exit 2)" "2" "$?"
 # ── 15. FTS5 hyphen-safety note ──────────────────────────────────────────
 section "installer settings merge"
 # Verify install.sh merges into pre-existing settings.json without clobbering.
-MERGE_TEST=$(mktemp -d -t smoke-merge-XX)
+MERGE_TEST=$(mktemp -d -t smoke-merge-XXXXXX)
 (cd "$MERGE_TEST" && git init -q)
 mkdir -p "$MERGE_TEST/.claude"
 cat > "$MERGE_TEST/.claude/settings.json" <<EOF
@@ -410,7 +410,7 @@ PY
 rm -rf "$MERGE_TEST"
 
 # Idempotent: running the installer twice shouldn't double-register hooks.
-IDEM=$(mktemp -d -t smoke-idem-XX)
+IDEM=$(mktemp -d -t smoke-idem-XXXXXX)
 (cd "$IDEM" && git init -q)
 bash "$IDASTONE/install.sh" --project-only --yes "$IDEM" >/dev/null 2>&1
 bash "$IDASTONE/install.sh" --project-only --yes "$IDEM" >/dev/null 2>&1
