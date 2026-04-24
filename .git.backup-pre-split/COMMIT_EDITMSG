@@ -1,0 +1,98 @@
+fix: address fresh-context audit findings
+
+A fresh-context audit agent ran read-only against the repo and returned
+~30 issues across 3 severities. This commit addresses all CRITICAL, all
+MAJOR, and most MINOR. Smoke test grew to 45 assertions covering the
+new behaviour.
+
+CRITICAL
+
+* LICENSE was truncated (17 lines). Replaced with full Apache-2.0 text
+  (202 lines) — the 17-line version failed compliance.
+* docs/install.md FTS5 preflight always printed "FTS5 ok" even on builds
+  without FTS5 (grep -qv on empty input exits 0). Replaced with CREATE
+  VIRTUAL TABLE which is what install.sh already used correctly.
+* User-global hooks (memory-session-start, memory-pre-compact,
+  check-orphan-dashboards) shipped but were NEVER registered in
+  ~/.claude/settings.json — three README-promised features silently
+  did not run. Added user-harness/settings.json and taught install.sh
+  to merge it (Python stdlib JSON-aware merge; dedupes by command
+  string so re-installs don't double-register).
+
+MAJOR
+
+* budget.py `reset project` wiped every project's counters because the
+  LIKE pattern was `project:%`. Scoped to the current project/session.
+* Portable sha256: compute_clean_hash.sh and dry_run_gate.sh tried
+  `shasum` (BSD/Perl) which is absent on minimal Linux. Fall-through to
+  sha256sum → shasum → python hashlib.
+* stuck-detector's alternating-cycle detector was hardcoded period-2.
+  Now detects periods 2, 3, and 4 (ABAB, ABCABC, ABCDABCD).
+* SQL injection hygiene: correction-detect.sh, learn-capture.sh,
+  deadend-capture.sh, and notify.sh all built SQL via string
+  interpolation with `'` escaping only. Moved to sqlite3 parameter
+  bindings. Matters most for notify.sh ($NTFY_ID comes from the
+  ntfy server response) and the two capture hooks (assistant-generated
+  text). Smoke test includes an injection-attempt assertion.
+* AppleScript injection in notify.sh: `sed 's/"/\\"/g'` doesn't escape
+  $, `, or \. Switched to `osascript` heredoc reading values from
+  env vars via `system attribute` — AppleScript never sees the text
+  via string interpolation.
+* Stage truth-source consolidation: stage.py had 4 valid stages,
+  journal.py had 6 (different set). journal.py now imports stage.py's
+  VALID_STAGES and adds 'debug' + 'improve' as search-policy sub-modes.
+* calibration.py docstring showed dashed flags (--add, --close) that
+  don't match the subcommand CLI (add / close). Fixed.
+* clean/SKILL.md invoked audit.py via `bash` but audit.py is Python.
+  Changed to `python3`.
+* doc-guard.sh: moved rotate_hook_log call to AFTER the fast-path .md
+  filter, so the vast majority of Write/Edit hits (source files) don't
+  pay the rotate-log IO.
+* scheduled-notes SKILL.md used `stat -f %m` (BSD-only). Replaced with
+  portable mtime helper that tries `stat -c %Y` (GNU) first.
+* zcm.sh anomaly regex narrowed: "Killed" now requires line-start
+  anchor so "Killed the zombie process" mid-log doesn't false-fire.
+  NaN is word-boundary-anchored.
+* install.sh non-interactive handling: new --yes flag, --project-only
+  for CI, auto-yes when stdin is not a TTY. --help added.
+
+MINOR
+
+* Scrubbed "matrix-thinking" and "learned-representations" leaks from
+  docs/STARS.md and skills/clean/SKILL.md.
+* autopilot.conf.example added — documents every variable and notes
+  that the conf is shell-sourced (not parsed), so don't put untrusted
+  content in it.
+* ARCHITECTURE.md now explicitly explains the workflow.db vs memory.db
+  split and why they aren't synchronized (roadmap: a promote.py bridge).
+* install.sh schema-upgrade message no longer claims to do column
+  migrations — it only applies CREATE IF NOT EXISTS additions.
+* compute_clean_hash.sh guards against empty blob-hash (skip file
+  instead of including a blank line in the hash input).
+* Dead `import subprocess` removed from capture hooks (SQL moved to
+  sqlite3 bindings; no longer needed).
+
+NEW TESTS (smoke went 40 → 45 assertions)
+
+* stuck-detector: 10 Read calls on different files stays silent.
+* stuck-detector: 3-cycle ABCABC pattern detected.
+* budget reset project: other project's counters untouched.
+* [LEARN] parameterized insert: adversarial quote/SQL safely stored.
+* installer settings merge: preserves pre-existing hooks, adds idastone
+  hooks, idempotent across repeated installs.
+
+Deferred (documented in PORTS.md as roadmap):
+
+* B2 VLM plot reviewer.
+* B5 timeout → forced-final-answer (needs direct Agent SDK hook).
+* B6 bias-probe panel (new /deploy-team template).
+* B7 /replan planning-interval skill.
+* C1 staged macro-workflow.
+* C3 best-so-far pool CLI (schema shipped, CLI TBD).
+* GVU operator separation for safe rule evolution.
+* Two-tier memory convention doc.
+* workflow.db ↔ memory.db bridge (scripts/memory/promote.py).
+
+Stuck-detector lost the weak 5th "condensation-loop" type from the
+OpenHands source — it's OpenHands-specific context-compression and
+doesn't translate to Claude Code's transcript model. Documented.

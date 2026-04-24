@@ -1057,7 +1057,7 @@
       const agentIndex = (name) => teamState.agents.findIndex((a) => a.name === name);
 
       // Repo-relative path for display. repoRootPrefix is loaded from
-      // /api/config so this works for any repo, not just cascade.
+      // /api/config so this works for any repo, not just a specific repo.
       let repoRootPrefix = null;
       const prettyPath = (p) => {
         if (!p) return "";

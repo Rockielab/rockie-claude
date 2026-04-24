@@ -2,7 +2,7 @@
 """One-shot migration: existing JSONL corrections + team/*.md → SQLite.
 
 Walks the repos registered in ~/.claude/projects/<project>/memory/ and the
-cascade-local .claude/memory/corrections/<dev>/ path, pulls any corrections
+repo-local .claude/memory/corrections/<dev>/ path, pulls any corrections
 JSONL entries into the SQLite memory store, and renames the source files
 with a `.migrated` suffix so it never re-runs.
 
