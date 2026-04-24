@@ -24,20 +24,25 @@ fi
 
 "$SQLITE" "$DB" < "$SCHEMA"
 
-# Apply numbered migrations in order, tracking user_version. A migration
-# file at memory/migrations/002_add_col_cost.sql applies only if the DB
-# is currently at user_version < 2.
+# If this is a brand-new DB (user_version still 0 after baseline), set it
+# to 1 — schema.sql IS version 1 baseline.
+CUR=$("$SQLITE" "$DB" "PRAGMA user_version;")
+if [ "$CUR" -eq 0 ]; then
+  "$SQLITE" "$DB" "PRAGMA user_version = 1;"
+  CUR=1
+fi
+
+# Apply numbered migrations in order, bumping user_version after each.
 if [ -d "$MIGRATIONS" ]; then
-  CUR=$("$SQLITE" "$DB" "PRAGMA user_version;")
   for f in $(ls "$MIGRATIONS"/*.sql 2>/dev/null | sort); do
     base=$(basename "$f")
     n="${base%%_*}"
-    # Strip leading zeros safely (bash would read 008 as octal).
-    n=$((10#$n))
+    n=$((10#$n))                # strip leading zeros safely (avoid octal)
     if [ "$n" -gt "$CUR" ]; then
       echo "applying migration $base (→ user_version=$n)"
       "$SQLITE" "$DB" < "$f"
       "$SQLITE" "$DB" "PRAGMA user_version = $n;"
+      CUR="$n"
     fi
   done
 fi

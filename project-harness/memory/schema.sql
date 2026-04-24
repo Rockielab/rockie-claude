@@ -4,11 +4,10 @@
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
--- Schema version marker. Bump on any breaking change. init_db.sh reads
--- this and applies migrations from memory/migrations/NNN_*.sql in order.
--- Writers (journal.py, queue.py, etc.) check this at connect time and
--- refuse to run if the DB is behind a hard-required version.
-PRAGMA user_version = 1;
+-- Schema version is tracked via PRAGMA user_version, NOT set here —
+-- init_db.sh owns the version so re-applying schema.sql on an already-
+-- migrated DB doesn't roll the version back. If user_version is 0 after
+-- schema.sql runs, init_db sets it to 1 (this file is baseline v1).
 
 CREATE TABLE IF NOT EXISTS learnings (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
