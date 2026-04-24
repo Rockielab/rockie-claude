@@ -31,13 +31,19 @@ def run(cmd, **kw):
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
 
 
-def changed_files(scope):
+def changed_files(scope, since=None):
     if scope == "staged":
         out = run(["git", "diff", "--cached", "--name-only"]).stdout
     elif scope == "dirty":
         mod = run(["git", "diff", "--name-only"]).stdout
         unt = run(["git", "ls-files", "--others", "--exclude-standard"]).stdout
         out = mod + unt
+    elif scope == "since":
+        # Audit files changed since a given ref (commit, tag, branch,
+        # or relative like HEAD~15). Useful for post-hoc review of
+        # recent work when nothing is dirty.
+        ref = since or "HEAD~1"
+        out = run(["git", "diff", f"{ref}..HEAD", "--name-only"]).stdout
     else:
         return []
     files = [f.strip() for f in out.splitlines() if f.strip()]
@@ -49,16 +55,26 @@ def audit_python(f):
     if shutil.which("ruff"):
         r = run(["ruff", "check", "--select", "F401,F811,F841,E711,E712", f])
         for line in r.stdout.strip().splitlines():
-            if line and not line.startswith("Found"):
+            # Skip ruff's summary/status lines — only real findings matter.
+            if not line:
+                continue
+            if line.startswith(("Found", "All checks passed")):
+                continue
+            if "warning:" in line.lower() or "error:" in line.lower() or f in line:
                 issues.append((f, "warning", line.strip()))
     else:
         issues.append((f, "info", "ruff not installed — static lint skipped"))
 
     try:
-        for i, line in enumerate(pathlib.Path(f).read_text().splitlines(), 1):
-            # Stray prints outside test files — warn, not block
-            if "test" not in f.lower() and re.match(r"\s*print\s*\(", line):
-                issues.append((f, "warning", f"L{i}: stray print() — debug artifact?"))
+        source = pathlib.Path(f).read_text()
+        # print() detection is meant to catch debug artifacts, not CLI UI.
+        # Skip files that look like CLIs (import argparse) or test files.
+        is_cli = ("import argparse" in source) or ("argparse.ArgumentParser" in source)
+        is_test = "test" in f.lower()
+        if not is_cli and not is_test:
+            for i, line in enumerate(source.splitlines(), 1):
+                if re.match(r"\s*print\s*\(", line):
+                    issues.append((f, "warning", f"L{i}: stray print() — debug artifact?"))
     except Exception:
         pass
     return issues
@@ -136,7 +152,8 @@ def compute_hash():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--scope", choices=["staged", "dirty"], default="staged")
+    ap.add_argument("--scope", choices=["staged", "dirty", "since"], default="staged")
+    ap.add_argument("--since", help="Ref (commit/branch/HEAD~N) for --scope since")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -146,8 +163,8 @@ def main():
         sys.exit(2)
     os.chdir(repo)
 
-    files = changed_files(args.scope)
-    scope_note = args.scope
+    files = changed_files(args.scope, since=args.since)
+    scope_note = args.scope if args.scope != "since" else f"since {args.since or 'HEAD~1'}"
     if args.scope == "staged" and not files:
         files = changed_files("dirty")
         scope_note = "dirty (no staged)"

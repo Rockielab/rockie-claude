@@ -164,7 +164,7 @@ FIRST_PRIO=$("$SQLITE" "$DB" "SELECT priority FROM experiment_queue WHERE id=$FI
 assert "queue next picks highest priority (=1)" "1" "$FIRST_PRIO"
 
 # done + drop + release + refill-needed
-python3 "$QP" done "$FIRST_ID" >/dev/null
+python3 "$QP" 'done' "$FIRST_ID" >/dev/null
 N_DONE=$("$SQLITE" "$DB" "SELECT COUNT(*) FROM experiment_queue WHERE status='done'")
 assert "queue done transitions to done" "1" "$N_DONE"
 
