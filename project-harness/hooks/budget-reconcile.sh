@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# UserPromptSubmit hook: continuously reconcile the dollars budget
+# against LIVE provider state, so budget-gate enforces against reality.
+#
+# TTL: skip if last reconcile was less than RECONCILE_TTL_SECS ago.
+# Default 120s — cheap enough to fire every couple of prompts but
+# doesn't spam the RunPod API.
+#
+# Fail-open: any error exits 0 so a broken hook never blocks a session.
+set +e
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO="$(cd "$ROOT/.." && pwd)"
+bash "$ROOT/scripts/rotate_hook_log.sh" 2>/dev/null
+RECONCILE_TTL_SECS=${RECONCILE_TTL_SECS:-120}
+
+# Skip if no API key — no point querying.
+STATE_DIR="$ROOT/.state"
+mkdir -p "$STATE_DIR"
+LAST_FILE="$STATE_DIR/last_reconcile_ts"
+
+# Source .env so RUNPOD_API_KEY is visible to the Python script.
+if [ -f "$REPO/.env" ]; then
+  set -a
+  . "$REPO/.env" 2>/dev/null
+  set +a
+fi
+[ -z "$RUNPOD_API_KEY" ] && exit 0
+
+# TTL check
+NOW=$(date +%s)
+if [ -f "$LAST_FILE" ]; then
+  LAST=$(cat "$LAST_FILE" 2>/dev/null || echo 0)
+  DELTA=$((NOW - LAST))
+  if [ "$DELTA" -lt "$RECONCILE_TTL_SECS" ]; then
+    exit 0   # still fresh
+  fi
+fi
+
+echo "[$(date -Iseconds)] budget-reconcile: fired" >> "$ROOT/memory/hook.log"
+
+# Run reconcile. --quiet suppresses stdout; stderr still surfaces
+# errors. Fail-open: reconcile errors don't block the session.
+python3 "$ROOT/scripts/runpod.py" reconcile --quiet >/dev/null 2>&1 || true
+
+exit 0

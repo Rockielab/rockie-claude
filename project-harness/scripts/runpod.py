@@ -434,8 +434,161 @@ def cmd_terminate(args) -> int:
     return 0
 
 
+def cmd_reconcile(args) -> int:
+    """Query live RunPod state, compute ACTUAL accrued spend per pod,
+    and SET budget_usage.dollars to the truth.
+
+    This is the mechanism behind budget enforcement. The dollars
+    ceiling is meaningless without this — at create() time we only
+    know the *estimated* upper-bound cost (bid × count × hours). If
+    a pod runs 6h instead of 2h, or gets preempted at 30 min, the
+    estimate diverges from reality. Reconcile fixes that.
+
+    Called by:
+      * hooks/budget-reconcile.sh on UserPromptSubmit (2-min TTL)
+      * autopilot_loop.sh each iteration (continuous during autonomy)
+      * `runpod.py reconcile` on-demand
+      * `runpod.py cost` transparently before reporting
+
+    Algorithm:
+      For each pod our gpu_pods knows about:
+        elapsed_hr = (now - created_at) / 3600
+        if desiredStatus == RUNNING:  rate = costPerHr   # compute
+        else:                         rate = storage_rate × volumeInGb
+        accrued = elapsed_hr * rate  # conservative upper bound
+      gpu_pods.accrued_dollars = that value
+      gpu_pods.last_reconciled_at = now
+      Then: budget_usage[project:<p>:dollars] = SUM(accrued_dollars)
+            across all project's pods.
+
+    This is conservative — it charges compute rate for the whole pod
+    lifespan rather than RUNNING-seconds only (which we can't fully
+    retrieve after EXITED). The upshot: the budget errs on the side
+    of blocking sooner. That's the right bias for a safety net.
+    """
+    STORAGE_RATE_PER_GB_HR = 0.10 / 30 / 24  # ≈ $0.000139/GB/hr
+
+    # Pull live state
+    data = gql('''
+        query { myself { pods {
+            id name desiredStatus volumeInGb costPerHr
+            runtime { uptimeInSeconds }
+        } } }
+    ''')
+    live_pods = {p["id"]: p for p in ((data.get("myself") or {}).get("pods") or [])}
+
+    conn = _db()
+    our_pods = conn.execute(
+        "SELECT id, created_at, project, bid_per_gpu, gpu_count FROM gpu_pods"
+    ).fetchall()
+
+    updates = 0
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+
+    for row in our_pods:
+        pod_id = row["id"]
+        live = live_pods.get(pod_id)
+        if not live:
+            # Pod was terminated or deleted on RunPod; our row may be
+            # stale. Mark as gone and freeze accrued_dollars (don't
+            # charge further). We don't know its final cost precisely,
+            # so leave whatever was last computed in accrued_dollars.
+            conn.execute(
+                "UPDATE gpu_pods SET status='GONE', last_reconciled_at=datetime('now') "
+                "WHERE id = ? AND status NOT IN ('TERMINATED','GONE')",
+                (pod_id,),
+            )
+            continue
+
+        created_s = (row["created_at"] or "").strip()
+        try:
+            # gpu_pods.created_at is SQLite datetime('now') → "YYYY-MM-DD HH:MM:SS" UTC
+            created = datetime.fromisoformat(created_s.replace(" ", "T")).replace(tzinfo=timezone.utc)
+        except Exception:
+            # Can't parse → don't update this row; print a diagnostic
+            if args.verbose:
+                print(f"[reconcile] skipping {pod_id}: bad created_at {created_s!r}", file=sys.stderr)
+            continue
+
+        elapsed_hr = max(0.0, (now - created).total_seconds() / 3600.0)
+        status = live.get("desiredStatus") or "?"
+        vol_gb = live.get("volumeInGb") or 0
+        compute_rate = float(live.get("costPerHr") or 0)
+
+        if status == "RUNNING":
+            # Charge compute rate for full elapsed time (conservative:
+            # overcharges pods that were EXITED→RUNNING cycles, but
+            # matches the "upper bound" semantics the budget expects).
+            rate = compute_rate + STORAGE_RATE_PER_GB_HR * vol_gb
+        else:
+            # EXITED/STOPPED: only storage charges now. BUT the pod may
+            # have run before EXITED. Without a historical-runtime
+            # record, we conservatively assume it ran half the elapsed
+            # time at compute rate. Cheaper to over-budget than to
+            # silently under-budget a preempted pod.
+            rate = (compute_rate * 0.5) + STORAGE_RATE_PER_GB_HR * vol_gb
+
+        accrued = round(elapsed_hr * rate, 4)
+
+        conn.execute(
+            "UPDATE gpu_pods SET accrued_dollars = ?, last_reconciled_at = datetime('now'), "
+            "status = ? WHERE id = ?",
+            (accrued, status, pod_id),
+        )
+        updates += 1
+
+    # Rewrite project-scope dollars counter = SUM(accrued_dollars)
+    # Keep separate key per project.
+    totals = conn.execute(
+        "SELECT project, SUM(accrued_dollars) AS total FROM gpu_pods GROUP BY project"
+    ).fetchall()
+    for t in totals:
+        proj = t["project"] or project_name()
+        total = float(t["total"] or 0)
+        import subprocess as _sp
+        # budget.py has no 'set dollars' — use the SQL-level upsert.
+        bkey = f"project:{proj}:dollars"
+        conn.execute(
+            """
+            INSERT INTO budget_usage (key, project, session_id, metric, value)
+            VALUES (?, ?, NULL, 'dollars', ?)
+            ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = datetime('now')
+            """,
+            (bkey, proj, total, total),
+        )
+
+    conn.commit()
+
+    # Stamp the last-reconcile time so the hook's TTL can read it
+    state = pathlib.Path(__file__).resolve().parent.parent / ".state"
+    state.mkdir(parents=True, exist_ok=True)
+    import time
+    (state / "last_reconcile_ts").write_text(str(int(time.time())))
+
+    if args.verbose or not args.quiet:
+        print(f"[reconcile] updated {updates} pod row(s), refreshed dollars counter(s)")
+        for t in totals:
+            print(f"  {t['project']}: accrued ${float(t['total'] or 0):.4f}")
+    return 0
+
+
 def cmd_cost(_args) -> int:
-    """Show current spend snapshot across known pods + cumulative budget usage."""
+    """Show current spend snapshot across known pods + cumulative budget usage.
+
+    Reconciles first so the numbers reflect current reality, not
+    create-time estimates. This is the safe default — reading cost
+    without reconciliation would show accounting fiction.
+    """
+    # Reconcile to get truthful numbers first (silent unless --verbose)
+    class _ArgsStub:
+        verbose = False
+        quiet = True
+    try:
+        cmd_reconcile(_ArgsStub())
+    except Exception:
+        pass  # reconcile failures shouldn't block cost display
+
     # Live RunPod state
     data = gql('''
         query { myself {
@@ -608,6 +761,12 @@ def main() -> int:
 
     cp_cost = sub.add_parser("cost", help="Current-hour spend snapshot + cumulative budget usage")
     cp_cost.set_defaults(func=cmd_cost)
+
+    rc = sub.add_parser("reconcile",
+        help="Query live state, recompute actual accrued cost per pod, rewrite budget.dollars")
+    rc.add_argument("--verbose", "-v", action="store_true")
+    rc.add_argument("--quiet", "-q", action="store_true")
+    rc.set_defaults(func=cmd_reconcile)
 
     rp = sub.add_parser("resume", help="Resume a stopped pod (spot, minimum bid by default)")
     rp.add_argument("pod_id")

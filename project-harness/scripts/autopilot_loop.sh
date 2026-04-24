@@ -152,6 +152,11 @@ emit start "autopilot online pid=$$"
 # Reap any zombie claims from a prior crashed run before starting fresh.
 python3 "$ROOT/scripts/queue.py" reap --older-than-hours 1 >&2 || true
 
+# Reconcile spend on startup so the budget gate has truthful numbers.
+if [ -n "${RUNPOD_API_KEY:-}" ]; then
+  python3 "$ROOT/scripts/runpod.py" reconcile --quiet >/dev/null 2>&1 || true
+fi
+
 ITERATION=0
 CONSECUTIVE_FAILURES=0
 COOLDOWN_SECONDS="$COOLDOWN_BASE_SECONDS"

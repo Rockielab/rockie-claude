@@ -24,7 +24,8 @@
           { "type": "command", "command": "bash .claude/hooks/load-relevant-rules.sh" },
           { "type": "command", "command": "bash .claude/hooks/load-relevant-deadends.sh" },
           { "type": "command", "command": "bash .claude/hooks/stuck-detector.sh" },
-          { "type": "command", "command": "bash .claude/hooks/stage-inject.sh" }
+          { "type": "command", "command": "bash .claude/hooks/stage-inject.sh" },
+          { "type": "command", "command": "bash .claude/hooks/budget-reconcile.sh" }
         ]
       }
     ],
