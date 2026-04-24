@@ -5,7 +5,7 @@ Five minutes, copy-paste. Assumes macOS/Linux, Claude Code already installed.
 ## 1. Install into your project
 
 ```bash
-git clone https://github.com/YOUR-ORG/idastone.git ~/idastone
+git clone https://github.com/saml212/idastone.git ~/idastone
 cd ~/idastone
 ./install.sh /path/to/your/research-project
 ```

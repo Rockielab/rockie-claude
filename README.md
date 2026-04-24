@@ -57,7 +57,7 @@ Every cycle should make the next cycle better.
 ## Install
 
 ```bash
-git clone https://github.com/YOUR-ORG/idastone.git
+git clone https://github.com/saml212/idastone.git
 cd idastone
 ./install.sh                # interactive; installs into your current project + ~/.claude
 ```

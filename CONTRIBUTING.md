@@ -63,7 +63,7 @@ Add this block to `docs/PORTS.md` in the right tier.
 ## Building
 
 ```bash
-git clone https://github.com/YOUR-ORG/idastone.git
+git clone https://github.com/saml212/idastone.git
 cd idastone
 bash tests/smoke-test.sh        # run the full smoke test
 bash install.sh /tmp/scratch    # dry-run install against a scratch project

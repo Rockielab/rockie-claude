@@ -21,7 +21,7 @@ python3 --version             # 3.9+
 ## Quick install
 
 ```bash
-git clone https://github.com/YOUR-ORG/idastone.git
+git clone https://github.com/saml212/idastone.git
 cd idastone
 ./install.sh
 ```
