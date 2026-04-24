@@ -195,21 +195,21 @@ def cmd_reap(args) -> int:
     cutoff_hours = args.older_than_hours
     conn = connect()
     rows = conn.execute(
-        f"""
+        """
         UPDATE experiment_queue
         SET status='pending',
             claimed_at=NULL,
             claimed_by=NULL,
-            notes = coalesce(notes || E'\n', '') ||
+            notes = coalesce(notes || char(10), '') ||
                     'reaped at ' || datetime('now') ||
-                    ' (zombie claim > {cutoff_hours}h)'
+                    ' (zombie claim > ' || ? || 'h)'
         WHERE project = ?
           AND status = 'claimed'
           AND claimed_at IS NOT NULL
           AND (julianday('now') - julianday(claimed_at)) * 24.0 > ?
         RETURNING id
         """,
-        (project_name(), cutoff_hours),
+        (cutoff_hours, project_name(), cutoff_hours),
     ).fetchall()
     if not rows:
         print(f"[queue-reap] no zombies older than {cutoff_hours}h")
