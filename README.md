@@ -142,6 +142,13 @@ clean-room reimplemented.
   rejected.
 - Run `/clean` before committing — the pre-commit-gate hook enforces it.
 
+**Upstream-back from agents:** if an agent using idastone in your own
+project discovers a harness-level improvement, it can emit
+`[LEARN harness-upstream] …` during the session. Run
+`/propose-harness-change` later to package the improvement as a
+reviewed, verified patch (Generator/Verifier/Updater split — the agent
+never auto-pushes). See `project-harness/skills/propose-harness-change/SKILL.md`.
+
 ## Further reading
 
 - [docs/quickstart.md](docs/quickstart.md) — 5-minute install + first commands

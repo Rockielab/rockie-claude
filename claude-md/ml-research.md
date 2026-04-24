@@ -3,6 +3,11 @@
 > Example specialization of the idastone template for an ML research repo.
 > Copy to your project's root as `CLAUDE.md` and edit the `Project` section
 > for your specifics.
+>
+> The "Where things go" table and the upstream-back flow from
+> `claude-md/CLAUDE.md.template` apply equally here — read that file
+> alongside this one, or pick one as your canonical CLAUDE.md and
+> merge the sections you want.
 
 ## Workflow: Plan → Research → Build → Audit → Run → Assess → Codify
 
