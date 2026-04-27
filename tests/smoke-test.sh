@@ -540,6 +540,65 @@ else
 fi
 rm -rf "$AP"
 
+section "gpu.py router with fake providers"
+# Exercise the cross-provider router's hop / cooldown / on-demand-gate
+# logic against tests/fakes/* without hitting any live API. CI never
+# touches a real provider.
+GPU_PY="$PROJ/.claude/scripts/gpu.py"
+# The fakes import `from providers.base` which gpu.py's sys.path setup
+# makes available; the dotted module path `tests.fakes.X` needs the
+# repo root on sys.path, which gpu.py adds via os.getcwd() when given
+# a non-registry provider name. So we cd to IDASTONE for these tests.
+cleanup_fake_pods() {
+  "$SQLITE" "$PROJ/.claude/memory/workflow.db" \
+    "DELETE FROM gpu_pods WHERE id LIKE 'fake-%' OR provider LIKE 'fake-%';" 2>/dev/null
+}
+
+# T1: router hops past OutOfStock to a working provider
+(cd "$IDASTONE" && python3 "$GPU_PY" create \
+  --providers tests.fakes.oos,tests.fakes.ok \
+  --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t1.out 2>&1)
+T1_RC=$?
+cleanup_fake_pods
+assert "router hops on OutOfStock and lands at working provider" "0" "$T1_RC"
+
+# T2: router hops past BidRejected + AuthError to working provider
+(cd "$IDASTONE" && python3 "$GPU_PY" create \
+  --providers tests.fakes.bid_rejected,tests.fakes.auth_fail,tests.fakes.ok \
+  --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t2.out 2>&1)
+T2_RC=$?
+cleanup_fake_pods
+assert "router hops past BidRejected+AuthError to working provider" "0" "$T2_RC"
+
+# T3: all providers fail → exit 3 (no provider succeeded)
+(cd "$IDASTONE" && python3 "$GPU_PY" create \
+  --providers tests.fakes.oos,tests.fakes.bid_rejected \
+  --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t3.out 2>&1)
+T3_RC=$?
+assert "router exits 3 when all providers exhausted" "3" "$T3_RC"
+
+# T4: on-demand-only provider WITHOUT --allow-on-demand → empty rank → exit 3
+(cd "$IDASTONE" && python3 "$GPU_PY" create \
+  --providers tests.fakes.ondemand \
+  --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t4.out 2>&1)
+T4_RC=$?
+assert "router excludes on-demand-only providers without --allow-on-demand" "3" "$T4_RC"
+
+# T5: same provider WITH --allow-on-demand → rank includes it → exit 0
+(cd "$IDASTONE" && python3 "$GPU_PY" create \
+  --providers tests.fakes.ondemand \
+  --gpu-type FakeH100 --hours 1 --yes --allow-on-demand >/tmp/gpu-t5.out 2>&1)
+T5_RC=$?
+cleanup_fake_pods
+assert "router includes on-demand-only providers with --allow-on-demand" "0" "$T5_RC"
+
+# T6: cost --json against a fake provider produces parseable JSON
+(cd "$IDASTONE" && python3 "$GPU_PY" cost --providers tests.fakes.ok --json >/tmp/gpu-t6.out 2>&1)
+T6_RC=$?
+T6_JSON_VALID=$(python3 -c "import json,sys; d=json.load(open('/tmp/gpu-t6.out')); print(1 if 'providers' in d and isinstance(d.get('providers'),list) else 0)" 2>/dev/null || echo 0)
+cleanup_fake_pods
+assert "cost --json returns parseable summary with providers list" "1" "$T6_JSON_VALID"
+
 section "FTS5 hyphen sanitization"
 if "$SQLITE" "$DB" "SELECT COUNT(*) FROM learnings_fts WHERE learnings_fts MATCH 'gradient-clipping'" >/dev/null 2>&1; then
   fail "FTS5 accepted unsanitized hyphen — load-relevant-rules sanitization is needed"

@@ -122,12 +122,19 @@ def _instantiate(name_or_path: str) -> Provider | None:
             return getattr(mod, class_name)()
         except (ImportError, AttributeError, AuthError):
             return None
-    # Dotted module path — testing hook
+
+    # Dotted module path — testing hook for fakes. The user supplied an
+    # explicit path, so failures here should be loud (silent skips here
+    # mean a typo'd test path silently passes), and we add cwd to
+    # sys.path so `tests.fakes.X`-style names resolve from the repo root.
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
     try:
         mod = importlib.import_module(name_or_path)
-    except ImportError:
+    except ImportError as e:
+        print(f"[gpu] {name_or_path}: import failed — {e}", file=sys.stderr)
         return None
-    # Look for a class whose name ends in Provider, or a `Provider` symbol
     cls = getattr(mod, "Provider", None)
     if cls is None or not isinstance(cls, type):
         for attr in dir(mod):
@@ -136,10 +143,12 @@ def _instantiate(name_or_path: str) -> Provider | None:
                 cls = obj
                 break
     if cls is None:
+        print(f"[gpu] {name_or_path}: no Provider class found", file=sys.stderr)
         return None
     try:
         return cls()
-    except Exception:
+    except Exception as e:
+        print(f"[gpu] {name_or_path}: instantiation failed — {e}", file=sys.stderr)
         return None
 
 
