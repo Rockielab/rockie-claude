@@ -325,15 +325,9 @@ credentials_wizard() {
     curl -sf -H "Authorization: Bearer $1" \
          "https://api.primeintellect.ai/api/v1/pods/?limit=1" >/dev/null 2>&1
   }
-  _probe_shadeform() {
-    curl -sf -H "X-API-KEY: $1" \
-         "https://api.shadeform.ai/v1/instances" >/dev/null 2>&1
-  }
-
   _wizard_setup_one "RunPod"           "RUNPOD_API_KEY"     "https://www.runpod.io/console/user/settings"     _probe_runpod
   _wizard_setup_one "Vast.ai"          "VAST_API_KEY"       "https://cloud.vast.ai/account/"                   _probe_vast
   _wizard_setup_one "Prime Intellect"  "PRIME_API_KEY"      "https://app.primeintellect.ai/dashboard/tokens"   _probe_prime
-  _wizard_setup_one "Shadeform"        "SHADEFORM_API_KEY"  "https://platform.shadeform.ai/settings/api"       _probe_shadeform
 
   echo ""
   case "$configured" in

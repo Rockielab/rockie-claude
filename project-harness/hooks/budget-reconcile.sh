@@ -26,7 +26,7 @@ if [ -f "$REPO/.env" ]; then
 fi
 # Skip if no provider configured — no point querying.
 if [ -z "${RUNPOD_API_KEY:-}" ] && [ -z "${VAST_API_KEY:-}" ] && \
-   [ -z "${PRIME_API_KEY:-}" ] && [ -z "${SHADEFORM_API_KEY:-}" ]; then
+   [ -z "${PRIME_API_KEY:-}" ]; then
   exit 0
 fi
 

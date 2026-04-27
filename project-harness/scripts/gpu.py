@@ -8,8 +8,9 @@ runpod.py but iterates every configured provider:
   list-gpus    — aggregate type catalog across providers (deduped, tagged)
   price        — side-by-side cheapest spot bid + on-demand per provider
   create       — ranked spot fallback (runpod → vast → prime), with
-                 cooldown filter from preemption_events. Shadeform only
-                 with --allow-on-demand (no spot tier).
+                 cooldown filter from preemption_events. On-demand-only
+                 providers join only with --allow-on-demand (none configured
+                 by default; the rank slot stays for future additions).
   list-pods    — aggregate. tags each pod with its provider.
   get-pod / stop / terminate / resume — need --provider since pod-ids
                  aren't globally unique.
@@ -23,8 +24,11 @@ Provider discovery (in priority order, ranked for spot fallback):
   1. RunPod      — env: RUNPOD_API_KEY
   2. Vast.ai     — env: VAST_API_KEY
   3. Prime       — env: PRIME_API_KEY (+ PRIME_SSH_KEY_ID for create)
-  4. Shadeform   — env: SHADEFORM_API_KEY (+ SHADEFORM_SSH_KEY_ID).
-                   On-demand only — never in default ranking.
+
+(Shadeform was previously included as on-demand fallback; dropped
+2026-04-27 — see docs/_internal/market-research/SYNTHESIS.md. The
+on-demand-fallback rank stays in the architecture for future
+on-demand-only providers; it's just empty by default now.)
 
 Override the discovery with --providers <name,name,...> (also accepts
 dotted module paths like tests.fakes.fake_a for testing). Empty
@@ -73,10 +77,13 @@ from providers.base import (  # noqa: E402
 DB_PATH = _HERE.parent / "memory" / "workflow.db"
 STATE_DIR = _HERE.parent / ".state"
 
-# Spot-tier providers, ranked. Shadeform is omitted from spot rank
-# (no spot tier) — it joins only when --allow-on-demand is set.
+# Spot-tier providers, ranked. On-demand-only providers join only
+# when --allow-on-demand is set; the list is empty by default since
+# Shadeform was dropped (no spot, redundant upstream coverage; see
+# docs/_internal/market-research/SYNTHESIS.md). Future on-demand-only
+# providers (Lambda direct, Foundry, etc.) would slot in here.
 DEFAULT_SPOT_RANK = ["runpod", "vast", "prime"]
-ON_DEMAND_FALLBACK = ["shadeform"]
+ON_DEMAND_FALLBACK: list[str] = []
 
 # Cooldown window for preemption_events: a (provider, gpu_type) pair
 # that preempted within this many minutes is skipped on create rank.
@@ -93,7 +100,6 @@ _PROVIDER_REGISTRY: dict[str, tuple[str, str, str]] = {
     "runpod":    ("RUNPOD_API_KEY",    "providers.runpod",    "RunPodProvider"),
     "vast":      ("VAST_API_KEY",      "providers.vast",      "VastProvider"),
     "prime":     ("PRIME_API_KEY",     "providers.primeintellect", "PrimeProvider"),
-    "shadeform": ("SHADEFORM_API_KEY", "providers.shadeform", "ShadeformProvider"),
 }
 
 
@@ -932,12 +938,12 @@ def main() -> int:
     cp.add_argument(
         "--ssh-key-id-env",
         default="PRIME_SSH_KEY_ID",
-        help="Env var holding the SSH key id (Prime/Shadeform need it)",
+        help="Env var holding the SSH key id (Prime needs it)",
     )
     cp.add_argument(
         "--allow-on-demand",
         action="store_true",
-        help="Permit Shadeform / on-demand-only providers to be considered last",
+        help="Permit on-demand-only providers to be considered last (none by default)",
     )
     cp.add_argument("--yes", action="store_true")
     cp.set_defaults(func=cmd_create)

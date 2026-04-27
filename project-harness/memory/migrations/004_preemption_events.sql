@@ -13,7 +13,7 @@
 CREATE TABLE IF NOT EXISTS preemption_events (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   pod_id      TEXT,                                          -- nullable: Vast may have lost it
-  provider    TEXT NOT NULL,                                 -- "runpod" | "vast" | "prime" | "shadeform"
+  provider    TEXT NOT NULL,                                 -- "runpod" | "vast" | "prime" | ...
   gpu_type    TEXT NOT NULL,
   ts          TEXT NOT NULL DEFAULT (datetime('now')),
   reason      TEXT                                           -- e.g. "actual=exited intended=running"
