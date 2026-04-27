@@ -325,9 +325,21 @@ credentials_wizard() {
     curl -sf -H "Authorization: Bearer $1" \
          "https://api.primeintellect.ai/api/v1/pods/?limit=1" >/dev/null 2>&1
   }
-  _wizard_setup_one "RunPod"           "RUNPOD_API_KEY"     "https://www.runpod.io/console/user/settings"     _probe_runpod
-  _wizard_setup_one "Vast.ai"          "VAST_API_KEY"       "https://cloud.vast.ai/account/"                   _probe_vast
-  _wizard_setup_one "Prime Intellect"  "PRIME_API_KEY"      "https://app.primeintellect.ai/dashboard/tokens"   _probe_prime
+  _wizard_setup_one "RunPod"           "RUNPOD_API_KEY"        "https://www.runpod.io/console/user/settings"        _probe_runpod
+  _wizard_setup_one "Vast.ai"          "VAST_API_KEY"          "https://cloud.vast.ai/account/"                      _probe_vast
+  _wizard_setup_one "Prime Intellect"  "PRIME_API_KEY"         "https://app.primeintellect.ai/dashboard/tokens"      _probe_prime
+  # Verda uses OAuth2 (client_id + client_secret), not a static API key. The
+  # wizard's per-provider helper assumes one env var; wire Verda manually with
+  # a guidance pointer instead. Both fields plus DATACRUNCH_SSH_KEY_ID need to
+  # be set in .env before gpu.py can use it.
+  if ! grep -E "^DATACRUNCH_CLIENT_ID=.+" "$target_env" >/dev/null 2>&1; then
+    echo "  · Verda Cloud: OAuth2 (client_id + client_secret + ssh_key_id) —"
+    echo "    set DATACRUNCH_CLIENT_ID, DATACRUNCH_CLIENT_SECRET, DATACRUNCH_SSH_KEY_ID"
+    echo "    in $target_env after generating at https://cloud.verda.com/account-settings/api"
+  else
+    echo "  ✓ Verda Cloud: already configured (DATACRUNCH_CLIENT_ID present)"
+    configured=$((configured+1))
+  fi
 
   echo ""
   case "$configured" in

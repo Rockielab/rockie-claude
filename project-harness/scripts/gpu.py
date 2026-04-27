@@ -82,7 +82,7 @@ STATE_DIR = _HERE.parent / ".state"
 # Shadeform was dropped (no spot, redundant upstream coverage; see
 # docs/_internal/market-research/SYNTHESIS.md). Future on-demand-only
 # providers (Lambda direct, Foundry, etc.) would slot in here.
-DEFAULT_SPOT_RANK = ["runpod", "vast", "prime"]
+DEFAULT_SPOT_RANK = ["runpod", "vast", "datacrunch", "prime"]
 ON_DEMAND_FALLBACK: list[str] = []
 
 # Cooldown window for preemption_events: a (provider, gpu_type) pair
@@ -97,9 +97,10 @@ STORAGE_RATE_PER_GB_HR = 0.10 / 30 / 24  # ≈ $0.000139/GB/hr (best-effort)
 
 _PROVIDER_REGISTRY: dict[str, tuple[str, str, str]] = {
     # name  → (env_var_required, module_path, class_name)
-    "runpod":    ("RUNPOD_API_KEY",    "providers.runpod",    "RunPodProvider"),
-    "vast":      ("VAST_API_KEY",      "providers.vast",      "VastProvider"),
-    "prime":     ("PRIME_API_KEY",     "providers.primeintellect", "PrimeProvider"),
+    "runpod":      ("RUNPOD_API_KEY",        "providers.runpod",         "RunPodProvider"),
+    "vast":        ("VAST_API_KEY",          "providers.vast",           "VastProvider"),
+    "prime":       ("PRIME_API_KEY",         "providers.primeintellect", "PrimeProvider"),
+    "datacrunch":  ("DATACRUNCH_CLIENT_ID",  "providers.datacrunch",     "DataCrunchProvider"),
 }
 
 
