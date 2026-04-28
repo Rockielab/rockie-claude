@@ -142,6 +142,11 @@ somewhere richer.
   distrust feature-dictionary interpretability"), ask for one specific
   paper as concrete-incident anchor.
 
+  **Starvation tiebreaker.** If the question budget allows only ONE
+  heroes half: ask DISTRUST. Distrust answers carry more differentiated
+  signal than admire — admire trends toward consensus picks, distrust
+  reveals what the researcher has been burned by.
+
 ## Anti-drift
 
 - Re-read this prompt at turn 4 AND turn 6. (Goal restatement.)
