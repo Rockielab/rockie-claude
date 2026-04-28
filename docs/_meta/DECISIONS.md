@@ -1,4 +1,4 @@
-<!-- META:idastone-construction -->
+<!-- META:rockie-construction -->
 # Decisions — architectural choices and why
 
 Append-only log. New decisions go at the bottom. Don't edit prior
@@ -19,6 +19,7 @@ explanation. "rigor" was rationally correct but emotionally cold;
 "eureka" was charming but cliché; "lodestone" required interpretation.
 "idastone" is original, distinctive, and pronounceable.
 **Constraints:** GitHub: saml212/idastone (private as of launch).
+**Superseded by:** DEC-20 (renamed to rockie 2026-04-28).
 
 ## DEC-02: Apache-2.0 license
 
@@ -206,7 +207,17 @@ gated enforcement prevents the same mistake from recurring. See
 `docs/_meta/` is committed and is for harness-construction agents
 (this directory). `docs/_internal/` is gitignored and is for
 user-confidential roadmap / positioning / unreleased material.
-**Reasoning:** Future agents working on idastone need
+**Reasoning:** Future agents working on rockie need
 PHILOSOPHY.md / DECISIONS.md / etc. to be in the OSS repo.
 Per-user roadmap docs (e.g. STARS.md) shouldn't be in the OSS
 repo. Two folders, two visibilities.
+
+## DEC-20: Renamed idastone → rockie
+
+**Date:** 2026-04-28
+**Choice:** Rename project to `rockie` with tagline "the AI research harness that rocks."
+**Reasoning:** "idastone" lacked the warmth and Pebble-adjacency the user wanted.
+"rockie" references Project Hail Mary's Rocky — the alien research partner —
+capturing the harness's role as a research collaborator. Spelling with `ie`
+avoids the Rocky Linux name collision on GitHub.
+**Supersedes:** DEC-01.

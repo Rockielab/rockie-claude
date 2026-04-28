@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Something in idastone doesn't work as documented.
+about: Something in rockie doesn't work as documented.
 labels: bug
 ---
 
@@ -8,7 +8,7 @@ labels: bug
 - OS: (macOS / Linux distro)
 - `sqlite3` version (`/usr/bin/sqlite3 --version`):
 - Python version (`python3 --version`):
-- idastone commit (`git log -1 --oneline`):
+- rockie commit (`git log -1 --oneline`):
 
 **What did you run?**
 <!-- Exact commands. Ideally a mktemp-based reproducer. -->

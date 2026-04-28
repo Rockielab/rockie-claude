@@ -5,7 +5,7 @@ description: RunPod-specific operations — provisioning, listing, terminating, 
 
 # /runpod — RunPod ops + per-pod billing detail
 
-RunPod is one of four providers idastone supports through `gpu.py`,
+RunPod is one of four providers rockie supports through `gpu.py`,
 but it's the **only one with a billing CLI worth wrapping**. Per the
 CLI surveys (`docs/_internal/cli-surveys/runpod.md`):
 `runpodctl billing pods --output json` gives per-pod spend, network

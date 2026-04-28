@@ -12,13 +12,13 @@ judge work, and *what dead ends* they refuse to revisit.
 Sister to AGENTS.md. AGENTS.md says what to do in this repo. The
 `taste/` corpus says who this researcher is — installed per-repo
 today, with cross-repo portability planned (symlink
-`~/.idastone/taste/` → `<repo>/.idastone/taste/` is the recommended
+`~/.rockie/taste/` → `<repo>/.rockie/taste/` is the recommended
 manual interim).
 
 ## When to run
 
 - **First-run** — SessionStart hook flags absence of
-  `.idastone/taste/INDEX.md`; agent suggests `/onboard`.
+  `.rockie/taste/INDEX.md`; agent suggests `/onboard`.
 - **Explicit invocation** — user types `/onboard`.
 - **Refresh** — `/onboard --redo` rewrites everything; `/onboard
   --section <soul|style|methodology|dismissals>` refreshes one file.
@@ -33,12 +33,12 @@ manual interim).
    phase-gated state machine. The user answers via text or
    `/voice tap`.
 3. As the interview progresses, the agent writes intermediate state
-   to `.idastone/taste/.draft.json` after every turn (so the session
+   to `.rockie/taste/.draft.json` after every turn (so the session
    can be resumed if interrupted).
 4. When coverage reaches the end-condition, the agent emits a summary
    round, asks the user to confirm or correct, then runs
    `runtime/compile.py` to produce the six markdown files in
-   `.idastone/taste/`.
+   `.rockie/taste/`.
 5. The agent opens `INDEX.md` in the user's editor for final review,
    then commits the corpus.
 
@@ -62,7 +62,7 @@ manual interim).
 ## Outputs
 
 ```
-.idastone/taste/
+.rockie/taste/
 ├── INDEX.md           # auto-injected every session via SessionStart
 ├── SOUL.md            # identity, worldview, hot takes
 ├── STYLE.md           # written + spoken voice
@@ -74,7 +74,7 @@ manual interim).
 
 The corpus is gitignored by default (personal — like `.env`). Users
 can opt to commit it by removing the entry from
-`.idastone/taste/.gitignore`. (For shared-team taste, see future
+`.rockie/taste/.gitignore`. (For shared-team taste, see future
 roadmap entry on team-level taste compositing.)
 
 ## Agent invocation protocol
@@ -101,9 +101,9 @@ When this skill fires, the agent should:
    questions asked). At end-condition, summarize captured signal
    per file, ask user to confirm or correct, then compile.
 7. Run `python3 .claude/skills/onboard/runtime/compile.py
-   .idastone/taste/.draft.json` — this writes the six markdown files
+   .rockie/taste/.draft.json` — this writes the six markdown files
    from templates and the draft JSON.
-8. Open `.idastone/taste/INDEX.md` for the user to review and edit.
+8. Open `.rockie/taste/INDEX.md` for the user to review and edit.
 
 ## Failure modes
 
@@ -126,7 +126,7 @@ When this skill fires, the agent should:
 ## Re-runs
 
 `/onboard --redo` archives the existing corpus to
-`.idastone/taste/.archive/<timestamp>/` and starts fresh. Identity
+`.rockie/taste/.archive/<timestamp>/` and starts fresh. Identity
 shifts deserve audit trail.
 
 `/onboard --section <name>` runs only the questions for that section,

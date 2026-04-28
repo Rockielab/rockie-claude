@@ -1,17 +1,17 @@
 # Environment variables
 
-idastone ships with zero secrets in source. Every secret — RunPod API
+rockie ships with zero secrets in source. Every secret — RunPod API
 key, ntfy topic, future provider keys — lives in a local `.env` file
 that's gitignored and never committed.
 
 ## Quickstart
 
 ```bash
-# From your project (or from the idastone clone itself):
+# From your project (or from the rockie clone itself):
 cp .env.example .env
 $EDITOR .env               # fill in real values
 
-# Load into your shell — every subprocess idastone spawns in this
+# Load into your shell — every subprocess rockie spawns in this
 # shell inherits the vars.
 set -a; . .env; set +a
 
@@ -21,14 +21,14 @@ python3 .claude/scripts/runpod.py auth
 
 ## Where `.env` lives
 
-- **In the idastone repo itself** — `~/Experiments/idastone/.env`.
-  Used when you're developing or testing idastone.
+- **In the rockie repo itself** — `~/Experiments/rockie/.env`.
+  Used when you're developing or testing rockie.
 - **In a user's research repo after `install.sh`** — the installer
   copies `.env.example` into `<project>/.claude/_local/env.example`
   (coming soon) or you place `.env` at the project root and source it
   from your shell.
 
-Either way, the rules in `install-assets/gitignore.idastone` and in
+Either way, the rules in `install-assets/gitignore.rockie` and in
 the installer's merged block ensure `.env` is never tracked.
 
 ## What goes in `.env`
@@ -55,7 +55,7 @@ echo 'dotenv' > .envrc   # loads .env on cd-in
 direnv allow .
 ```
 
-idastone doesn't require direnv — the manual `set -a; . .env; set +a`
+rockie doesn't require direnv — the manual `set -a; . .env; set +a`
 is fine.
 
 ## Rotation
@@ -70,7 +70,7 @@ Treat `.env` like any other credentials file:
 
 ## What the agent sees
 
-idastone's hooks and skills read env vars just like any other
+rockie's hooks and skills read env vars just like any other
 process. The `stage-inject`, `load-relevant-rules`, etc. hooks run
 under the Claude Code session's shell, so they see whatever was
 exported there. If you start autopilot with `nohup`, remember to

@@ -1,9 +1,9 @@
-<!-- META:idastone-construction -->
-# Philosophy — what idastone is and is not
+<!-- META:rockie-construction -->
+# Philosophy — what rockie is and is not
 
 ## High-level goals (mirrored to user-facing README)
 
-idastone is **the autonomous research harness that catches bugs before
+rockie is **the autonomous research harness that catches bugs before
 you burn GPU time, notices when it's stuck, tracks whether its
 predictions were right, and tells you honestly whether the idea was
 wrong or just the implementation.**
@@ -19,13 +19,13 @@ The harness's job is to make the loop reliable enough to run for
 days without human input, while staying honest about what it doesn't
 know.
 
-## The four ecosystem gaps idastone closes
+## The four ecosystem gaps rockie closes
 
 These are the unique differentiators — the load-bearing pitch.
 Anything that duplicates these gets rejected (see CONTRIBUTING.md).
 
 1. **Pre-run code audit.** Every other harness reviews after a run
-   burns compute. idastone audits *before* — `/deploy-team
+   burns compute. rockie audits *before* — `/deploy-team
    pre-launch-audit` + `/clean` sentinel + pre-commit-gate hook.
 2. **Semantic-loop detection.** Agents spin silently for hours
    elsewhere. We port OpenHands's `stuck.py` taxonomy (4 loop types,
@@ -43,7 +43,7 @@ We're still differentiated on the 3-value coarse pre-classifier
 feeding `[LEARN]/[DEAD-END]` routing, but the "nobody owns this"
 framing is stale. See `LESSONS.md`.)
 
-## What idastone IS
+## What rockie IS
 
 - **A Claude-Code-native composition of hooks, skills, and SQLite.**
   Not a runtime, not a framework, not an orchestration DSL. Hooks
@@ -56,13 +56,13 @@ framing is stale. See `LESSONS.md`.)
 - **Self-improving with guardrails.** `[LEARN]` and `[DEAD-END]`
   blocks accumulate durable knowledge in workflow.db. The
   `/propose-harness-change` skill packages improvements as PRs back
-  to upstream idastone via Generator/Verifier/Updater role-separation.
+  to upstream rockie via Generator/Verifier/Updater role-separation.
 - **Provider-portable for compute.** `runpod.py` exists today;
   `gpu.py` extends to Vast/Verda/Prime with cooldown-driven hopping.
   Spend tracked against truthful provider state, not
   estimates.
 
-## What idastone IS NOT
+## What rockie IS NOT
 
 - **Not a paper-writing system.** We deliberately reject Sakana-style
   full LaTeX writeup pipelines. Out of scope.

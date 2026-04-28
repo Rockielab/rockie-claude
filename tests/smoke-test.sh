@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# idastone smoke test — dogfoods the full harness in a throwaway dir.
+# rockie smoke test — dogfoods the full harness in a throwaway dir.
 #
 # Covers:
 #   • Schema apply + seed
@@ -26,15 +26,15 @@ set -u
 RED=$'\e[31m'; GREEN=$'\e[32m'; YELLOW=$'\e[33m'; DIM=$'\e[2m'; RESET=$'\e[0m'
 SQLITE=/usr/bin/sqlite3
 
-IDASTONE="$(cd "$(dirname "$0")/.." && pwd)"
-WORK=$(mktemp -d -t idastone-smoke-XXXXXX)
+ROCKIE="$(cd "$(dirname "$0")/.." && pwd)"
+WORK=$(mktemp -d -t rockie-smoke-XXXXXX)
 # Clean up any per-test tempdirs that escape the main WORK; set a broad trap.
-trap 'rm -rf "$WORK"; rm -rf /tmp/idastone-autopilot-* /tmp/idastone-migration-* /tmp/smoke-merge-* /tmp/smoke-idem-* 2>/dev/null' EXIT
+trap 'rm -rf "$WORK"; rm -rf /tmp/rockie-autopilot-* /tmp/rockie-migration-* /tmp/smoke-merge-* /tmp/smoke-idem-* 2>/dev/null' EXIT
 
 PASS=0
 FAIL=0
 
-echo "${YELLOW}▸ idastone smoke test${RESET}"
+echo "${YELLOW}▸ rockie smoke test${RESET}"
 echo "${DIM}  workspace: $WORK${RESET}"
 
 assert() {
@@ -60,7 +60,7 @@ section "setup"
 mkdir -p "$WORK/proj"
 (cd "$WORK/proj" && git init -q)
 mkdir -p "$WORK/proj/.claude"
-rsync -a --exclude='__pycache__' "$IDASTONE/project-harness/" "$WORK/proj/.claude/" >/dev/null
+rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/" "$WORK/proj/.claude/" >/dev/null
 chmod +x "$WORK/proj/.claude/hooks/"*.sh "$WORK/proj/.claude/scripts/"*.sh "$WORK/proj/.claude/scripts/"*.py 2>/dev/null
 PROJ="$WORK/proj"
 DB="$PROJ/.claude/memory/workflow.db"
@@ -345,7 +345,7 @@ VICTIM_CONTENT=$(cat "$WORK/victim.txt")
 [ "$VICTIM_CONTENT" = "victim" ] && ok "apply_patch: refuses ../ escape" || fail "apply_patch: TRAVERSAL — victim overwritten"
 
 cat > "$WORK/patch.abs" <<PATCH
-/tmp/idastone-abs-target.txt
+/tmp/rockie-abs-target.txt
 <<<<<<< SEARCH
 whatever
 =======
@@ -353,7 +353,7 @@ PWNED
 >>>>>>> REPLACE
 PATCH
 python3 "$PROJ/.claude/scripts/apply_patch.py" < "$WORK/patch.abs" >/dev/null 2>&1
-[ ! -f /tmp/idastone-abs-target.txt ] && ok "apply_patch: refuses absolute paths" || { rm -f /tmp/idastone-abs-target.txt; fail "apply_patch: absolute path accepted"; }
+[ ! -f /tmp/rockie-abs-target.txt ] && ok "apply_patch: refuses absolute paths" || { rm -f /tmp/rockie-abs-target.txt; fail "apply_patch: absolute path accepted"; }
 
 # ── 13. Dry-run gate ─────────────────────────────────────────────────────
 section "dry-run gate"
@@ -399,22 +399,22 @@ mkdir -p "$MERGE_TEST/.claude"
 cat > "$MERGE_TEST/.claude/settings.json" <<EOF
 {"permissions":{"allow":["Bash(ls:*)"]},"hooks":{"Stop":[{"matcher":"*","hooks":[{"type":"command","command":"bash .claude/hooks/preexisting.sh"}]}]}}
 EOF
-bash "$IDASTONE/install.sh" --project-only --yes "$MERGE_TEST" >/dev/null 2>&1
-python3 - "$MERGE_TEST" <<'PY' && ok "installer preserves pre-existing hooks + adds idastone hooks" || fail "installer merge"
+bash "$ROCKIE/install.sh" --project-only --yes "$MERGE_TEST" >/dev/null 2>&1
+python3 - "$MERGE_TEST" <<'PY' && ok "installer preserves pre-existing hooks + adds rockie hooks" || fail "installer merge"
 import json, sys, pathlib
 cfg = json.loads(pathlib.Path(sys.argv[1], ".claude/settings.json").read_text())
 assert cfg["permissions"]["allow"] == ["Bash(ls:*)"], "permissions clobbered"
 stop_cmds = [h["command"] for blk in cfg["hooks"].get("Stop", []) for h in blk.get("hooks", [])]
 assert "bash .claude/hooks/preexisting.sh" in stop_cmds, "pre-existing hook dropped"
-assert "bash .claude/hooks/learn-capture.sh" in stop_cmds, "idastone learn-capture not added"
+assert "bash .claude/hooks/learn-capture.sh" in stop_cmds, "rockie learn-capture not added"
 PY
 rm -rf "$MERGE_TEST"
 
 # Idempotent: running the installer twice shouldn't double-register hooks.
 IDEM=$(mktemp -d -t smoke-idem-XXXXXX)
 (cd "$IDEM" && git init -q)
-bash "$IDASTONE/install.sh" --project-only --yes "$IDEM" >/dev/null 2>&1
-bash "$IDASTONE/install.sh" --project-only --yes "$IDEM" >/dev/null 2>&1
+bash "$ROCKIE/install.sh" --project-only --yes "$IDEM" >/dev/null 2>&1
+bash "$ROCKIE/install.sh" --project-only --yes "$IDEM" >/dev/null 2>&1
 COUNT=$(python3 -c '
 import json; d=json.load(open("'"$IDEM"'/.claude/settings.json"))
 stop=[h["command"] for blk in d["hooks"].get("Stop", []) for h in blk.get("hooks", [])]
@@ -425,13 +425,13 @@ rm -rf "$IDEM"
 section "autopilot.conf safe parser"
 APC="$WORK/apc"
 mkdir -p "$APC/.claude/scripts" "$APC/.claude/memory"
-cp "$IDASTONE/project-harness/scripts/autopilot_loop.sh" "$APC/.claude/scripts/"
+cp "$ROCKIE/project-harness/scripts/autopilot_loop.sh" "$APC/.claude/scripts/"
 # Malicious values must be refused (command substitution, backticks, non-allowlisted keys).
 cat > "$APC/.claude/autopilot.conf" <<'EOF'
-LAUNCHER_CMD="$(touch /tmp/idastone-pwn-$$)"
+LAUNCHER_CMD="$(touch /tmp/rockie-pwn-$$)"
 EOF
 bash "$APC/.claude/scripts/autopilot_loop.sh" >/dev/null 2>&1
-[ -e /tmp/idastone-pwn-$$ ] && { rm -f /tmp/idastone-pwn-$$; fail "autopilot.conf: command substitution executed"; } || ok "autopilot.conf: refuses \$(…) command substitution"
+[ -e /tmp/rockie-pwn-$$ ] && { rm -f /tmp/rockie-pwn-$$; fail "autopilot.conf: command substitution executed"; } || ok "autopilot.conf: refuses \$(…) command substitution"
 
 cat > "$APC/.claude/autopilot.conf" <<'EOF'
 LAUNCHER_CMD=`id`
@@ -464,10 +464,10 @@ echo "$IN" | bash "$PROJ/.claude/hooks/pre-train-gate.sh" >/dev/null 2>&1
 [ "$?" -eq 2 ] && ok "pre-train-gate: '# --smoke' comment no longer bypass" || fail "pre-train-gate: comment bypass still works"
 
 section "schema migration walker"
-MGT=$(mktemp -d -t idastone-migration-XXXXXX)
+MGT=$(mktemp -d -t rockie-migration-XXXXXX)
 mkdir -p "$MGT/.claude/scripts" "$MGT/.claude/memory/migrations"
-cp "$IDASTONE/project-harness/memory/schema.sql" "$MGT/.claude/memory/"
-cp "$IDASTONE/project-harness/scripts/init_db.sh" "$MGT/.claude/scripts/"
+cp "$ROCKIE/project-harness/memory/schema.sql" "$MGT/.claude/memory/"
+cp "$ROCKIE/project-harness/scripts/init_db.sh" "$MGT/.claude/scripts/"
 cat > "$MGT/.claude/memory/migrations/002_add_test_col.sql" <<'SQL'
 ALTER TABLE experiments ADD COLUMN ci_test_col TEXT;
 SQL
@@ -498,11 +498,11 @@ for cli in journal.py queue.py calibration.py budget.py convergence.py apply_pat
 done
 
 section "autopilot loop one-iteration end-to-end (mock launcher)"
-AP=$(mktemp -d -t idastone-autopilot-XXXXXX)
+AP=$(mktemp -d -t rockie-autopilot-XXXXXX)
 mkdir -p "$AP/.claude/scripts" "$AP/.claude/memory" "$AP/.claude/.state"
-cp "$IDASTONE/project-harness/memory/schema.sql"      "$AP/.claude/memory/"
+cp "$ROCKIE/project-harness/memory/schema.sql"      "$AP/.claude/memory/"
 for s in init_db.sh queue.py zcm.sh autopilot_loop.sh notify.sh rotate_hook_log.sh; do
-  cp "$IDASTONE/project-harness/scripts/$s" "$AP/.claude/scripts/"
+  cp "$ROCKIE/project-harness/scripts/$s" "$AP/.claude/scripts/"
 done
 bash "$AP/.claude/scripts/init_db.sh" >/dev/null 2>&1
 # Mock launcher: writes PID of a 1s sleep to PID_FILE, writes a log with a step, returns.
@@ -548,14 +548,14 @@ GPU_PY="$PROJ/.claude/scripts/gpu.py"
 # The fakes import `from providers.base` which gpu.py's sys.path setup
 # makes available; the dotted module path `tests.fakes.X` needs the
 # repo root on sys.path, which gpu.py adds via os.getcwd() when given
-# a non-registry provider name. So we cd to IDASTONE for these tests.
+# a non-registry provider name. So we cd to ROCKIE for these tests.
 cleanup_fake_pods() {
   "$SQLITE" "$PROJ/.claude/memory/workflow.db" \
     "DELETE FROM gpu_pods WHERE id LIKE 'fake-%' OR provider LIKE 'fake-%';" 2>/dev/null
 }
 
 # T1: router hops past OutOfStock to a working provider
-(cd "$IDASTONE" && python3 "$GPU_PY" create \
+(cd "$ROCKIE" && python3 "$GPU_PY" create \
   --providers tests.fakes.oos,tests.fakes.ok \
   --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t1.out 2>&1)
 T1_RC=$?
@@ -563,7 +563,7 @@ cleanup_fake_pods
 assert "router hops on OutOfStock and lands at working provider" "0" "$T1_RC"
 
 # T2: router hops past BidRejected + AuthError to working provider
-(cd "$IDASTONE" && python3 "$GPU_PY" create \
+(cd "$ROCKIE" && python3 "$GPU_PY" create \
   --providers tests.fakes.bid_rejected,tests.fakes.auth_fail,tests.fakes.ok \
   --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t2.out 2>&1)
 T2_RC=$?
@@ -571,21 +571,21 @@ cleanup_fake_pods
 assert "router hops past BidRejected+AuthError to working provider" "0" "$T2_RC"
 
 # T3: all providers fail → exit 3 (no provider succeeded)
-(cd "$IDASTONE" && python3 "$GPU_PY" create \
+(cd "$ROCKIE" && python3 "$GPU_PY" create \
   --providers tests.fakes.oos,tests.fakes.bid_rejected \
   --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t3.out 2>&1)
 T3_RC=$?
 assert "router exits 3 when all providers exhausted" "3" "$T3_RC"
 
 # T4: on-demand-only provider WITHOUT --allow-on-demand → empty rank → exit 3
-(cd "$IDASTONE" && python3 "$GPU_PY" create \
+(cd "$ROCKIE" && python3 "$GPU_PY" create \
   --providers tests.fakes.ondemand \
   --gpu-type FakeH100 --hours 1 --yes >/tmp/gpu-t4.out 2>&1)
 T4_RC=$?
 assert "router excludes on-demand-only providers without --allow-on-demand" "3" "$T4_RC"
 
 # T5: same provider WITH --allow-on-demand → rank includes it → exit 0
-(cd "$IDASTONE" && python3 "$GPU_PY" create \
+(cd "$ROCKIE" && python3 "$GPU_PY" create \
   --providers tests.fakes.ondemand \
   --gpu-type FakeH100 --hours 1 --yes --allow-on-demand >/tmp/gpu-t5.out 2>&1)
 T5_RC=$?
@@ -593,7 +593,7 @@ cleanup_fake_pods
 assert "router includes on-demand-only providers with --allow-on-demand" "0" "$T5_RC"
 
 # T6: cost --json against a fake provider produces parseable JSON
-(cd "$IDASTONE" && python3 "$GPU_PY" cost --providers tests.fakes.ok --json >/tmp/gpu-t6.out 2>&1)
+(cd "$ROCKIE" && python3 "$GPU_PY" cost --providers tests.fakes.ok --json >/tmp/gpu-t6.out 2>&1)
 T6_RC=$?
 T6_JSON_VALID=$(python3 -c "import json,sys; d=json.load(open('/tmp/gpu-t6.out')); print(1 if 'providers' in d and isinstance(d.get('providers'),list) else 0)" 2>/dev/null || echo 0)
 cleanup_fake_pods

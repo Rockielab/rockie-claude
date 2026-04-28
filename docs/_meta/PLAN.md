@@ -1,4 +1,4 @@
-<!-- META:idastone-construction -->
+<!-- META:rockie-construction -->
 # Plan — current snapshot of in-flight work
 
 Updated 2026-04-27. This file is the most volatile in `docs/_meta/`;
@@ -7,7 +7,7 @@ expect it to drift. When in doubt, trust `git log` over this file.
 ## What's running right now (background agents)
 
 ### gpu-arbitrage agent (independent session)
-- Working in `~/Experiments/idastone`
+- Working in `~/Experiments/rockie`
 - Following the spec at `docs/providers-impl-spec.md`
 - Following the prompt at `docs/_internal/gpu-arbitrage-agent-prompt.md`
 - Already landed (2026-04-27): `providers/base.py` + Protocol;
@@ -44,8 +44,8 @@ expect it to drift. When in doubt, trust `git log` over this file.
 
 ## Currently-EXITED RunPod state
 
-- Pod `uqzsjvlhbx34p5` (idastone-dogfood-spot) — first attempt; EXITED.
-- Pod `3ggrdxb3m22wt4` (idastone-dogfood-spot) — second attempt;
+- Pod `uqzsjvlhbx34p5` (rockie-dogfood-spot) — first attempt; EXITED.
+- Pod `3ggrdxb3m22wt4` (rockie-dogfood-spot) — second attempt;
   preempted in < 5 min on H100 SXM at $1.50.
 - Both still incurring volume storage charges (~$0.13/day combined).
 - User can `runpod.py terminate <id> --yes` to stop accrual; current

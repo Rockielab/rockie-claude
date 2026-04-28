@@ -1,12 +1,12 @@
-# Contributing to idastone
+# Contributing to rockie
 
-Thanks for thinking about contributing. idastone is opinionated — here's
+Thanks for thinking about contributing. rockie is opinionated — here's
 what that means for PRs.
 
 ## Ground rules
 
 1. **Composition over replacement.** Every new feature must compose with
-   idastone's existing differentiators (pre-run audit, FTS5 `[LEARN]` DB,
+   rockie's existing differentiators (pre-run audit, FTS5 `[LEARN]` DB,
    waterfall, pre-experiment checklist, ntfy, living-doc pattern,
    `/deploy-team`, pre-commit gate). Don't propose something that just
    duplicates one of these. If you think one needs to be replaced, open
@@ -63,8 +63,8 @@ Add this block to `docs/PORTS.md` in the right tier.
 ## Building
 
 ```bash
-git clone https://github.com/saml212/idastone.git
-cd idastone
+git clone https://github.com/saml212/rockie.git
+cd rockie
 bash tests/smoke-test.sh        # run the full smoke test
 bash install.sh /tmp/scratch    # dry-run install against a scratch project
 ```
@@ -84,7 +84,7 @@ We don't require a specific conventional-commits style, but:
 - Don't add Co-Authored-By Claude trailers unless you're actively
   pairing on it — most contributors won't be.
 
-## Upstream-back from agents using idastone
+## Upstream-back from agents using rockie
 
 If an agent discovers a harness-level improvement while working in a
 downstream repo, the recommended flow is:
@@ -93,7 +93,7 @@ downstream repo, the recommended flow is:
    session. The Stop hook captures it.
 2. Later, user invokes `/propose-harness-change` (see
    `project-harness/skills/propose-harness-change/SKILL.md`).
-3. The Generator role writes the patch against a local idastone clone.
+3. The Generator role writes the patch against a local rockie clone.
 4. A fresh-context Verifier (dispatched via the Agent tool) audits
    composition + smoke-test coverage + injection regressions.
 5. Human reviews the verdict, runs the smoke test, and — if all good —
@@ -113,8 +113,8 @@ passing Verifier, the human decides when a PR opens.
 
 ## Why this process
 
-The three-agent research pass at idastone's genesis read 11 competing
+The three-agent research pass at rockie's genesis read 11 competing
 harnesses. Many of them feel like magic when you `git clone` them but
 collapse when you try to compose: hooks conflict, CLIs fight, memory
-systems overlap. We want idastone to compose, for five years, across
+systems overlap. We want rockie to compose, for five years, across
 domains we haven't thought of yet. That's what these rules buy.

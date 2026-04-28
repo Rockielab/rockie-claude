@@ -11,8 +11,8 @@ Subcommands:
     diff <a> <b>      compare two modes
     seed              copy built-in templates into modes/ (install hook)
 
-The active mode is named in <repo>/.idastone/taste/modes/_active.
-A mode is a TOML file at <repo>/.idastone/taste/modes/<name>.toml.
+The active mode is named in <repo>/.rockie/taste/modes/_active.
+A mode is a TOML file at <repo>/.rockie/taste/modes/<name>.toml.
 
 Built-in templates live next to this script at ../templates/. The
 seed subcommand copies templates into the user's modes/ on first run.
@@ -29,7 +29,7 @@ import tempfile
 from pathlib import Path
 
 # tomllib is stdlib in Python 3.11+. For 3.10 we'd need a backport;
-# idastone smoke-test pins recent Pythons so this is safe today.
+# rockie smoke-test pins recent Pythons so this is safe today.
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -48,10 +48,10 @@ KNOWN_SECTIONS = {"hardware", "reading", "methodology", "risk",
 
 
 def _repo_root() -> Path:
-    """Walk up from cwd to find a .idastone or .claude directory."""
+    """Walk up from cwd to find a .rockie or .claude directory."""
     cur = Path.cwd().resolve()
     while cur != cur.parent:
-        if (cur / ".idastone").exists() or (cur / ".claude").exists():
+        if (cur / ".rockie").exists() or (cur / ".claude").exists():
             return cur
         cur = cur.parent
     # Fallback: cwd. CLI will create dirs as needed.
@@ -59,7 +59,7 @@ def _repo_root() -> Path:
 
 
 def _modes_dir(repo: Path) -> Path:
-    return repo / ".idastone" / "taste" / "modes"
+    return repo / ".rockie" / "taste" / "modes"
 
 
 def _active_file(repo: Path) -> Path:

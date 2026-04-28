@@ -63,9 +63,9 @@ jobs:
       - name: Run Claude review
         run: |
           cat > /tmp/review-prompt.md <<'PROMPT'
-          You are a code reviewer for idastone, an open-source autonomous-
+          You are a code reviewer for rockie, an open-source autonomous-
           research harness. This PR is proposed against `main`. Review the
-          diff below against idastone's contributing rules:
+          diff below against rockie's contributing rules:
 
           1. **Composition** — does this duplicate an existing
              differentiator (pre-run audit, FTS5 [LEARN] DB, waterfall,
@@ -111,7 +111,7 @@ jobs:
           ## 🤖 Claude review (self-hosted, Max subscription)
 
           _Generated from the PR diff by the \`claude\` CLI on the
-          idastone self-hosted runner. Run \`gh workflow run claude-review.yml
+          rockie self-hosted runner. Run \`gh workflow run claude-review.yml
           -f pr_number=${{ steps.pr.outputs.number }}\` to re-review after changes._
 
           ---

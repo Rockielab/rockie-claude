@@ -1,9 +1,9 @@
-<!-- META:idastone-construction -->
+<!-- META:rockie-construction -->
 # Onboarding & TASTE.md design
 
 Design spec for `/onboard` — the first-run interview that compiles a
 researcher's intellectual taste into a durable, agent-injectable
-artifact. This is idastone's marquee distinguishing feature: no other
+artifact. This is rockie's marquee distinguishing feature: no other
 research harness models the researcher.
 
 Sister to AGENTS.md (project-level contract). Where AGENTS.md tells an
@@ -15,7 +15,7 @@ agent *what to do in this repo*, the `taste/` corpus tells an agent
 ### D1 — Schema: SOUL.md-extended, six files in `taste/`
 
 ```
-.idastone/taste/
+.rockie/taste/
 ├── INDEX.md           # ~300 tokens, auto-injects every session
 ├── SOUL.md            # identity, worldview, hot takes  (SOUL.md compat)
 ├── STYLE.md           # written + spoken voice          (SOUL.md compat)
@@ -40,7 +40,7 @@ hedging, hesitation, the surprising clause. SOUL.md got this right.
 ordinary SOUL.md doesn't: the rigor standards by which a result is
 judged true (METHODOLOGY) and the dead ends never to revisit
 (DISMISSALS). Adding two files preserves community legibility — any
-SOUL.md-aware agent reads idastone's identity layer for free, and
+SOUL.md-aware agent reads rockie's identity layer for free, and
 METHODOLOGY/DISMISSALS get upstream-back via `/propose-harness-change`
 to the soul.md spec when they prove their worth.
 
@@ -157,7 +157,7 @@ After the interview, `runtime/compile.py` reads the interview JSON
 (structured as `{topic: [{q, a, soft, ladder_chain}]}`) and produces
 the six markdown files using `templates/`. The agent then opens each
 in the user's editor for final review before saving to
-`.idastone/taste/`.
+`.rockie/taste/`.
 
 Compile is deterministic — same JSON, same output. This means the
 interview can be re-played, audited, or replayed in dogfood with
@@ -168,7 +168,7 @@ different researcher personas without leaking history.
 - `install.sh` final message points at `/onboard` as the recommended
   next step (alongside the existing CLAUDE.md template instruction).
 - SessionStart hook (`session-report.sh`) checks for
-  `.idastone/taste/INDEX.md`; if absent, prepends one line to the
+  `.rockie/taste/INDEX.md`; if absent, prepends one line to the
   hook output: *"No `taste/` corpus found. Run `/onboard` to set
   one up — 5 minutes, voice optional."*
 - INDEX.md (when present) is included in the SessionStart additional
@@ -204,8 +204,8 @@ identity into per-area silos. (We considered profiles — see
 discarded-design notes.)
 
 **Modes are overlays.** A mode is a small TOML file at
-`.idastone/taste/modes/<name>.toml`. The active mode is named in
-`.idastone/taste/modes/_active` (one line, plain text). SessionStart
+`.rockie/taste/modes/<name>.toml`. The active mode is named in
+`.rockie/taste/modes/_active` (one line, plain text). SessionStart
 reads both and surfaces a compact summary alongside INDEX.md.
 
 A mode CAN override specific fields (e.g.,
@@ -282,9 +282,9 @@ not modified by mode switches.
 
 ### Built-in mode templates
 
-Idastone ships these in
+Rockie ships these in
 `project-harness/skills/mode/templates/`. The installer copies them
-into `.idastone/taste/modes/` on first run if the directory doesn't
+into `.rockie/taste/modes/` on first run if the directory doesn't
 yet exist.
 
 - `default.toml` — empty overlay; baseline.
@@ -315,7 +315,7 @@ Researchers customize by copying a template and editing, or invoking
 When mode is loaded, surface obvious mismatches:
 - mode requires `hardware.preferred_provider = "runpod"` but
   `RUNPOD_API_KEY` is unset → WARN.
-- mode says `spot_only = true` but `IDASTONE_GPU_MODE = none` →
+- mode says `spot_only = true` but `ROCKIE_GPU_MODE = none` →
   WARN.
 - mode references `dismissals.active_categories = ["X"]` and no
   DISMISSALS.md entry has tag `[X]` → WARN.
@@ -326,7 +326,7 @@ the rest of the SessionStart report.
 ### Discarded: per-area profiles
 
 We considered separate per-area corpora (
-`.idastone/taste/{ml-research,neuro}/...`), then rejected:
+`.rockie/taste/{ml-research,neuro}/...`), then rejected:
 - A researcher's identity (SOUL.md, STYLE.md) doesn't fork by
   research area; only operational policy does.
 - Forces redundant onboarding interviews per area.

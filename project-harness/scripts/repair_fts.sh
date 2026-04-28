@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# repair_fts.sh — rebuild idastone's FTS5 virtual tables.
+# repair_fts.sh — rebuild rockie's FTS5 virtual tables.
 #
 # Architecture audit F10: corruption of any FTS5 shadow table
 # (_data / _idx / _content) can silently break every FTS-joined query.

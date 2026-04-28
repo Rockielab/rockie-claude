@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# idastone — installer.
+# rockie — installer.
 # Copies project-harness/ into <target>/.claude/ and user-harness/ into ~/.claude/.
 # Merges hook definitions into both settings.json files (never overwrites
 # existing user keys).
@@ -31,7 +31,7 @@ if [ ! -t 0 ]; then
   ASSUME_YES=1
 fi
 
-IDASTONE="$(cd "$(dirname "$0")" && pwd)"
+ROCKIE="$(cd "$(dirname "$0")" && pwd)"
 
 if [ ! -d "$TARGET_PROJECT" ]; then
   echo "error: target project dir '$TARGET_PROJECT' does not exist" >&2
@@ -39,16 +39,16 @@ if [ ! -d "$TARGET_PROJECT" ]; then
 fi
 TARGET_PROJECT=$(cd "$TARGET_PROJECT" && pwd -P)
 
-# Refuse to install idastone into its own clone.
-IDASTONE_PHYS=$(cd "$IDASTONE" && pwd -P)
-if [ "$TARGET_PROJECT" = "$IDASTONE_PHYS" ]; then
-  echo "error: refusing to install idastone into its own clone ($TARGET_PROJECT)." >&2
+# Refuse to install rockie into its own clone.
+ROCKIE_PHYS=$(cd "$ROCKIE" && pwd -P)
+if [ "$TARGET_PROJECT" = "$ROCKIE_PHYS" ]; then
+  echo "error: refusing to install rockie into its own clone ($TARGET_PROJECT)." >&2
   echo "       pass the path to your research project as the first argument:" >&2
   echo "         ./install.sh ~/path/to/your/research-project" >&2
   exit 2
 fi
 
-echo "┌── idastone installer ──────────────────────────────────"
+echo "┌── rockie installer ──────────────────────────────────"
 echo "│  project-harness  →  $TARGET_PROJECT/.claude/"
 if [ "$PROJECT_ONLY" = "1" ]; then
   echo "│  user-harness     →  (skipped: --project-only)"
@@ -59,7 +59,7 @@ echo "└───────────────────────�
 
 # ── Preflight ───────────────────────────────────────────────────────────
 command -v /usr/bin/sqlite3 >/dev/null 2>&1 || {
-  echo "error: /usr/bin/sqlite3 not found. idastone pins to /usr/bin/sqlite3 so FTS5 is guaranteed." >&2
+  echo "error: /usr/bin/sqlite3 not found. rockie pins to /usr/bin/sqlite3 so FTS5 is guaranteed." >&2
   exit 2
 }
 command -v python3 >/dev/null 2>&1 || { echo "error: python3 required" >&2; exit 2; }
@@ -99,7 +99,7 @@ else:
 
 def merge_hooks(dst_hooks, src_hooks):
     # Each event (e.g. "Stop") maps to a list of {matcher?, hooks:[...]}.
-    # We append idastone's items but dedupe by command string so re-install
+    # We append rockie's items but dedupe by command string so re-install
     # stays idempotent.
     for event, blocks in src_hooks.items():
         dst_hooks.setdefault(event, [])
@@ -128,11 +128,11 @@ PYEOF
 # ── Install project-harness ──────────────────────────────────────────────
 mkdir -p "$TARGET_PROJECT/.claude"/{hooks,scripts,skills,memory,memory/migrations,.state}
 
-rsync -a --exclude='__pycache__' "$IDASTONE/project-harness/hooks/"   "$TARGET_PROJECT/.claude/hooks/"
-rsync -a --exclude='__pycache__' "$IDASTONE/project-harness/scripts/" "$TARGET_PROJECT/.claude/scripts/"
-rsync -a "$IDASTONE/project-harness/memory/schema.sql" "$TARGET_PROJECT/.claude/memory/schema.sql"
-rsync -a --exclude='__pycache__' "$IDASTONE/project-harness/memory/migrations/" "$TARGET_PROJECT/.claude/memory/migrations/" 2>/dev/null || true
-rsync -a --exclude='__pycache__' "$IDASTONE/project-harness/skills/"  "$TARGET_PROJECT/.claude/skills/"
+rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/hooks/"   "$TARGET_PROJECT/.claude/hooks/"
+rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/scripts/" "$TARGET_PROJECT/.claude/scripts/"
+rsync -a "$ROCKIE/project-harness/memory/schema.sql" "$TARGET_PROJECT/.claude/memory/schema.sql"
+rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/memory/migrations/" "$TARGET_PROJECT/.claude/memory/migrations/" 2>/dev/null || true
+rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/skills/"  "$TARGET_PROJECT/.claude/skills/"
 
 # Stamp a stable project_id so two checkouts of the same repo (e.g.
 # ~/proj and ~/backup/proj) don't collide on directory-basename as their
@@ -150,7 +150,7 @@ if [ ! -f "$PROJECT_ID_FILE" ]; then
 fi
 
 # Merge project-harness settings (hook registrations)
-merge_settings "$IDASTONE/project-harness/settings.json" "$TARGET_PROJECT/.claude/settings.json"
+merge_settings "$ROCKIE/project-harness/settings.json" "$TARGET_PROJECT/.claude/settings.json"
 
 # Init / migrate DB
 if [ ! -f "$TARGET_PROJECT/.claude/memory/workflow.db" ]; then
@@ -167,21 +167,21 @@ fi
 
 chmod +x "$TARGET_PROJECT/.claude/hooks/"*.sh "$TARGET_PROJECT/.claude/scripts/"*.sh 2>/dev/null || true
 
-# ── Merge idastone .gitignore block into target project's .gitignore ────
-# Idempotent: rewrites only the block between BEGIN/END idastone markers,
+# ── Merge rockie .gitignore block into target project's .gitignore ────
+# Idempotent: rewrites only the block between BEGIN/END rockie markers,
 # leaving the user's own rules alone. Users can keep their own rules
 # OUTSIDE the markers; the installer never touches those lines.
-GITIGNORE_TPL="$IDASTONE/install-assets/gitignore.idastone"
+GITIGNORE_TPL="$ROCKIE/install-assets/gitignore.rockie"
 GITIGNORE_DST="$TARGET_PROJECT/.gitignore"
 if [ -f "$GITIGNORE_TPL" ]; then
   if [ ! -f "$GITIGNORE_DST" ]; then
     cat "$GITIGNORE_TPL" > "$GITIGNORE_DST"
     echo "[+] wrote $GITIGNORE_DST"
-  elif ! grep -q '^# BEGIN idastone' "$GITIGNORE_DST"; then
+  elif ! grep -q '^# BEGIN rockie' "$GITIGNORE_DST"; then
     # No existing block — append.
     printf '\n' >> "$GITIGNORE_DST"
     cat "$GITIGNORE_TPL" >> "$GITIGNORE_DST"
-    echo "[+] appended idastone block to $GITIGNORE_DST"
+    echo "[+] appended rockie block to $GITIGNORE_DST"
   else
     # Replace just the existing block (between markers).
     python3 - "$GITIGNORE_DST" "$GITIGNORE_TPL" <<'PY'
@@ -189,12 +189,12 @@ import pathlib, re, sys
 dst = pathlib.Path(sys.argv[1]); tpl = pathlib.Path(sys.argv[2]).read_text()
 text = dst.read_text()
 new = re.sub(
-    r'(?ms)^# BEGIN idastone\n.*?^# END idastone\n',
-    tpl[tpl.index('# BEGIN idastone'):tpl.index('# END idastone')+len('# END idastone\n')],
+    r'(?ms)^# BEGIN rockie\n.*?^# END rockie\n',
+    tpl[tpl.index('# BEGIN rockie'):tpl.index('# END rockie')+len('# END rockie\n')],
     text, count=1,
 )
 dst.write_text(new)
-print(f"[+] refreshed idastone block in {sys.argv[1]}")
+print(f"[+] refreshed rockie block in {sys.argv[1]}")
 PY
   fi
 fi
@@ -203,16 +203,16 @@ fi
 if [ "$PROJECT_ONLY" = "0" ]; then
   mkdir -p "$HOME/.claude"/{hooks,skills,scripts,teams}
 
-  rsync -a "$IDASTONE/user-harness/hooks/" "$HOME/.claude/hooks/"
-  rsync -a --exclude='__pycache__' "$IDASTONE/user-harness/scripts/memory/" "$HOME/.claude/scripts/memory/"
-  rsync -a --exclude='__pycache__' "$IDASTONE/user-harness/skills/deploy-team/" "$HOME/.claude/skills/deploy-team/"
-  rsync -a --exclude='node_modules' "$IDASTONE/user-harness/teams/" "$HOME/.claude/teams/"
+  rsync -a "$ROCKIE/user-harness/hooks/" "$HOME/.claude/hooks/"
+  rsync -a --exclude='__pycache__' "$ROCKIE/user-harness/scripts/memory/" "$HOME/.claude/scripts/memory/"
+  rsync -a --exclude='__pycache__' "$ROCKIE/user-harness/skills/deploy-team/" "$HOME/.claude/skills/deploy-team/"
+  rsync -a --exclude='node_modules' "$ROCKIE/user-harness/teams/" "$HOME/.claude/teams/"
   chmod +x "$HOME/.claude/hooks/"*.sh 2>/dev/null || true
 
   # Merge user-harness settings (SessionStart, PreCompact, UserPromptSubmit).
   # This closes the biggest gap from the audit: hooks previously shipped
   # but unregistered.
-  merge_settings "$IDASTONE/user-harness/settings.json" "$HOME/.claude/settings.json"
+  merge_settings "$ROCKIE/user-harness/settings.json" "$HOME/.claude/settings.json"
 
   echo "[+] installed user-global hooks + scripts + /deploy-team + teams/"
 fi
@@ -224,26 +224,26 @@ if [ ! -f "$TARGET_PROJECT/CLAUDE.md" ]; then
   echo "next step — drop a CLAUDE.md at the root of your project:"
   echo ""
   echo "  # generic:"
-  echo "  cp $IDASTONE/claude-md/CLAUDE.md.template $TARGET_PROJECT/CLAUDE.md"
+  echo "  cp $ROCKIE/claude-md/CLAUDE.md.template $TARGET_PROJECT/CLAUDE.md"
   echo ""
   echo "  # for an ML research project:"
-  echo "  cp $IDASTONE/claude-md/ml-research.md     $TARGET_PROJECT/CLAUDE.md"
+  echo "  cp $ROCKIE/claude-md/ml-research.md     $TARGET_PROJECT/CLAUDE.md"
   echo ""
   echo "then edit the 'Project' section for your specifics."
   echo "──────────────────────────────────────────────────────────────"
 fi
 
 # ── /onboard nudge ───────────────────────────────────────────────────────
-# The taste corpus is what makes idastone distinctive. Surface it
+# The taste corpus is what makes rockie distinctive. Surface it
 # explicitly at install time alongside CLAUDE.md.
-if [ ! -d "$TARGET_PROJECT/.idastone/taste" ]; then
+if [ ! -d "$TARGET_PROJECT/.rockie/taste" ]; then
   echo ""
   echo "──────────────────────────────────────────────────────────────"
   echo "recommended — capture your research taste:"
   echo ""
   echo "  In your first \`claude\` session, run:  /onboard"
   echo ""
-  echo "  5–7 questions, ~5 minutes. Produces a \`.idastone/taste/\`"
+  echo "  5–7 questions, ~5 minutes. Produces a \`.rockie/taste/\`"
   echo "  corpus (SOUL.md, METHODOLOGY.md, DISMISSALS.md, etc.) that"
   echo "  agents auto-load every session. Adds \`/onboard --deep\` for"
   echo "  voice-first laddering."
@@ -269,7 +269,7 @@ fi
 # guidance, return without prompting.
 credentials_wizard() {
   local target_env="$TARGET_PROJECT/.env"
-  local source_template="$IDASTONE/.env.example"
+  local source_template="$ROCKIE/.env.example"
 
   # Ensure a .env exists so users have a documented starting point.
   if [ ! -f "$target_env" ] && [ -f "$source_template" ]; then
@@ -301,22 +301,22 @@ credentials_wizard() {
   echo "──────────────────────────────────────────────────────────────"
   echo " GPU provisioning mode"
   echo "──────────────────────────────────────────────────────────────"
-  echo "idastone can either drive GPU provisioning through its built-in"
+  echo "rockie can either drive GPU provisioning through its built-in"
   echo "cross-provider router, OR step out of the way if you have your"
   echo "own setup."
   echo ""
-  echo "  router    — use idastone's RunPod/Vast/Prime/Verda router (default)"
+  echo "  router    — use rockie's RunPod/Vast/Prime/Verda router (default)"
   echo "  custom    — bring your own (own AWS account, on-prem cluster,"
   echo "              SSH tunnel, university, etc.); the agent will go"
   echo "              through a one-time discovery flow on first GPU need"
-  echo "  none      — no GPU provisioning; running idastone for non-GPU work"
+  echo "  none      — no GPU provisioning; running rockie for non-GPU work"
   echo ""
   printf "  Choose mode [router|custom|none] (default router): "
   read -r mode
   mode=$(echo "$mode" | tr 'A-Z' 'a-z')
   case "$mode" in
     custom)
-      _set_env_var IDASTONE_GPU_MODE custom "$target_env"
+      _set_env_var ROCKIE_GPU_MODE custom "$target_env"
       echo ""
       echo "✓ custom mode set."
       echo "  In your first agent session, the /gpu-custom-setup skill will"
@@ -325,14 +325,14 @@ credentials_wizard() {
       return 0
       ;;
     none)
-      _set_env_var IDASTONE_GPU_MODE none "$target_env"
+      _set_env_var ROCKIE_GPU_MODE none "$target_env"
       echo ""
-      echo "✓ GPU layer disabled. Set IDASTONE_GPU_MODE=router in $target_env"
+      echo "✓ GPU layer disabled. Set ROCKIE_GPU_MODE=router in $target_env"
       echo "  if you change your mind later."
       return 0
       ;;
     *)
-      _set_env_var IDASTONE_GPU_MODE router "$target_env"
+      _set_env_var ROCKIE_GPU_MODE router "$target_env"
       ;;
   esac
 
@@ -387,7 +387,7 @@ credentials_wizard() {
   _probe_runpod() {
     curl -sf -X POST -H "Authorization: Bearer $1" \
          -H 'Content-Type: application/json' \
-         -A 'idastone-install/0.1' \
+         -A 'rockie-install/0.1' \
          -d '{"query":"query{myself{id}}"}' \
          "https://api.runpod.io/graphql" >/dev/null 2>&1
   }
@@ -441,7 +441,7 @@ credentials_wizard
 if [ -z "${NTFY_TOPIC:-}" ]; then
   echo ""
   echo "optional: set NTFY_TOPIC in your shell profile for push notifications."
-  echo "see $IDASTONE/docs/ntfy-setup.md"
+  echo "see $ROCKIE/docs/ntfy-setup.md"
 fi
 
 # ── Node orchestrator nudge ──────────────────────────────────────────────
@@ -452,4 +452,4 @@ if [ "$PROJECT_ONLY" = "0" ] && [ ! -d "$HOME/.claude/teams/orchestrator/node_mo
 fi
 
 echo ""
-echo "✓ idastone install complete."
+echo "✓ rockie install complete."

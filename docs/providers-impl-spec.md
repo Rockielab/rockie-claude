@@ -133,7 +133,7 @@ curl -X PUT https://console.vast.ai/api/v0/asks/12345678/ \
     "runtype": "ssh",
     "price": 1.00,
     "target_state": "running",
-    "label": "idastone-spot",
+    "label": "rockie-spot",
     "env": "-p 22:22",
     "cancel_unavail": true
   }'
@@ -316,7 +316,7 @@ curl -X POST https://api.primeintellect.ai/api/v1/pods/ \
   -H "Content-Type: application/json" \
   -d '{
     "pod": {
-      "name": "idastone-spot",
+      "name": "rockie-spot",
       "cloudId": "runpod-secure-us-ca-2",
       "gpuType": "H100_80GB",
       "socket": "SXM5",

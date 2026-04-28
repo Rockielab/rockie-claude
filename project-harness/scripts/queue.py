@@ -34,7 +34,7 @@ import sqlite3
 import sys
 
 DB = pathlib.Path(__file__).resolve().parent.parent / "memory" / "workflow.db"
-TARGET_PENDING = int(os.environ.get("IDASTONE_QUEUE_TARGET", "5"))
+TARGET_PENDING = int(os.environ.get("ROCKIE_QUEUE_TARGET", "5"))
 VALID_STATUS = {"pending", "claimed", "done", "dropped"}
 
 

@@ -1,9 +1,9 @@
 {
-  "name": "idastone-team-orchestrator",
+  "name": "rockie-team-orchestrator",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Multi-agent team orchestrator for idastone — spawns claude CLI agents in worktrees, coordinates via shared thread, serves live dashboard.",
+  "description": "Multi-agent team orchestrator for rockie — spawns claude CLI agents in worktrees, coordinates via shared thread, serves live dashboard.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

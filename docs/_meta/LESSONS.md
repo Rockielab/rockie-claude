@@ -1,4 +1,4 @@
-<!-- META:idastone-construction -->
+<!-- META:rockie-construction -->
 # Lessons — explicit user feedback + audit findings
 
 This file is the durable record of "things the user said" and
@@ -7,7 +7,7 @@ load-bearing.
 
 Earlier than 2026-04-23 entries are pre-history (the Pebble
 internal harness era). The dated entries below begin with
-idastone's OSS extraction.
+rockie's OSS extraction.
 
 ---
 
@@ -27,7 +27,7 @@ harness is failing — fix the harness, not write more playbooks.
 > "Tokens should be infinity, tool_calls infinity, wallclock infinity.
 > Only GPU hours are not infinity."
 
-**Rule:** For users on Claude Max running idastone locally, only
+**Rule:** For users on Claude Max running rockie locally, only
 external compute spend (`dollars`) corresponds to real money.
 Default `.claude/budget.toml` ships with `[project] dollars` only.
 Other dimensions are tracked but not capped unless user opts in.
@@ -86,7 +86,7 @@ and backticks. Added to `.gitignore`.
 
 ### YOUR-ORG placeholder broke first-contact install (CRITICAL, fixed 2026-04-24)
 README, quickstart, install.md, CONTRIBUTING all said
-`git clone https://github.com/YOUR-ORG/idastone.git`. Replaced with
+`git clone https://github.com/YOUR-ORG/rockie.git`. Replaced with
 `saml212`.
 
 ### Cascade leftover from rename (MAJOR, fixed 2026-04-24)

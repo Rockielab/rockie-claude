@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""runpod.py — RunPod GPU provisioning CLI for idastone.
+"""runpod.py — RunPod GPU provisioning CLI for rockie.
 
 A thin wrapper over providers/runpod.py:RunPodProvider that speaks the
-verbs idastone's autopilot needs: find cheap H100 spot pricing, bid, poll
+verbs rockie's autopilot needs: find cheap H100 spot pricing, bid, poll
 until the pod is running, fetch SSH endpoint, stop, terminate.
 
 Design principles:
@@ -462,7 +462,7 @@ def _project_name() -> str:
     """Best-effort: read project name from env or repo path."""
     import os as _os
 
-    return _os.environ.get("IDASTONE_PROJECT") or pathlib.Path.cwd().name
+    return _os.environ.get("ROCKIE_PROJECT") or pathlib.Path.cwd().name
 
 
 @_handle
@@ -620,7 +620,7 @@ def main() -> int:
     cp.add_argument("--min-vcpu", type=int, default=4)
     cp.add_argument("--min-ram", type=int, default=16)
     cp.add_argument("--image", default="")
-    cp.add_argument("--name", default="idastone-spot")
+    cp.add_argument("--name", default="rockie-spot")
     cp.add_argument("--secure", action="store_true", help="Use SECURE-cloud datacenters only")
     cp.add_argument("--env", nargs="*", default=[], help="KEY=VALUE pairs (e.g. --env HF_TOKEN=abc)")
     cp.add_argument("--yes", action="store_true", help="Actually submit the mutation")

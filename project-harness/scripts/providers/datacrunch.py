@@ -142,7 +142,7 @@ class DataCrunchProvider:
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "idastone-datacrunch/0.1 (+https://github.com/saml212/idastone)",
+                "User-Agent": "rockie-datacrunch/0.1 (+https://github.com/saml212/rockie)",
             },
             method=method,
         )
@@ -270,7 +270,7 @@ class DataCrunchProvider:
             "image": spec.image or "ubuntu-22.04-cuda-12.4-docker",
             "ssh_key_ids": [ssh_key_id],
             "hostname": spec.name,
-            "description": f"idastone-managed: {spec.name}",
+            "description": f"rockie-managed: {spec.name}",
             "location_code": location,
             "is_spot": True,
             "os_volume": {

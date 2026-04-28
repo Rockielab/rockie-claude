@@ -6,6 +6,6 @@
 -- column the reconcile SELECT crashes with "no such column: project".
 --
 -- NULL is allowed; reconcile resolves NULL to the current project name
--- (IDASTONE_PROJECT env or repo dir basename).
+-- (ROCKIE_PROJECT env or repo dir basename).
 
 ALTER TABLE gpu_pods ADD COLUMN project TEXT;

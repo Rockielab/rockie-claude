@@ -2,7 +2,7 @@
 """Budget controller — track and enforce ceilings on long autonomous runs.
 
 Ports the PaperQA2 `settings.py` pattern (Apache-2.0) — centralized
-limits, every subsystem reads from one place. idastone-specific:
+limits, every subsystem reads from one place. rockie-specific:
 ceilings live in `.claude/budget.toml`, cumulative usage in workflow.db
 (`budget_usage` table), and a PreToolUse hook aborts when any ceiling
 is crossed.

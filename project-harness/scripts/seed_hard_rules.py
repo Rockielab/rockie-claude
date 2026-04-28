@@ -5,10 +5,10 @@ Idempotent: skips rows whose (project, category, rule) already exists. Safe
 to re-run on an existing DB.
 
 This file seeds ONLY harness-level rules that apply to any project using
-idastone. To seed project-specific rules (architecture gotchas, training
+rockie. To seed project-specific rules (architecture gotchas, training
 lessons, etc.), copy examples/seed_example_ml_research.py to a file in your
 own repo and edit it. Do NOT add your project's rules here — this file is
-the idastone default and should stay generic.
+the rockie default and should stay generic.
 
 Project name is derived from the parent repo's directory name (the repo
 that this .claude/ lives inside). Override with the PROJECT env var if you

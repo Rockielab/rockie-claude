@@ -5,12 +5,12 @@ description: Manage swappable operational overlays on top of the central taste c
 
 # /mode — operational overlays on the taste corpus
 
-Identity is centralized in `.idastone/taste/`. Modes carry the small,
+Identity is centralized in `.rockie/taste/`. Modes carry the small,
 context-dependent policy bits that flip between sessions:
 paper-deadline vs. exploratory vs. dogfooding vs. teaching.
 
-A mode is a TOML file at `.idastone/taste/modes/<name>.toml`. The
-active mode is named in `.idastone/taste/modes/_active` (one line).
+A mode is a TOML file at `.rockie/taste/modes/<name>.toml`. The
+active mode is named in `.rockie/taste/modes/_active` (one line).
 SessionStart loads it and surfaces a compact summary alongside the
 researcher identity from INDEX.md.
 
@@ -34,8 +34,8 @@ python3 .claude/skills/mode/runtime/mode.py active          # print just the act
 
 ## Built-in templates
 
-Shipped in `<idastone>/project-harness/skills/mode/templates/`. The
-installer copies them into `.idastone/taste/modes/` on first run if
+Shipped in `<rockie>/project-harness/skills/mode/templates/`. The
+installer copies them into `.rockie/taste/modes/` on first run if
 that directory doesn't exist yet.
 
 | Template | When |
@@ -127,7 +127,7 @@ Disk corpus is never modified by mode switches. Switching is cheap.
   "vast"` but VAST_API_KEY unset) — SessionStart conflict-detection
   warns; agent should propose `gpu.py auth vast` before relying on
   it.
-- Mode says `spot_only = true` but `IDASTONE_GPU_MODE = none` —
+- Mode says `spot_only = true` but `ROCKIE_GPU_MODE = none` —
   WARN: the GPU provider layer is disabled.
 
 ## Agent invocation protocol

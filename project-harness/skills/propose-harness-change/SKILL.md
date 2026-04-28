@@ -1,6 +1,6 @@
 ---
 name: propose-harness-change
-description: Package a harness-level improvement (a new hook, a fixed script, an improved skill) as a reviewed, verified patch — optionally openable as a PR against the idastone upstream repo. Uses Generator/Verifier/Updater role separation so the proposing agent never auto-commits; a fresh-context verifier plus the smoke test must agree, and the human signs off before anything is written to the user's idastone checkout or pushed anywhere. Triggers when the user says "upstream that", "propose a harness change", "write a PR for idastone", or when a recent `[LEARN harness-upstream]` block is waiting.
+description: Package a harness-level improvement (a new hook, a fixed script, an improved skill) as a reviewed, verified patch — optionally openable as a PR against the rockie upstream repo. Uses Generator/Verifier/Updater role separation so the proposing agent never auto-commits; a fresh-context verifier plus the smoke test must agree, and the human signs off before anything is written to the user's rockie checkout or pushed anywhere. Triggers when the user says "upstream that", "propose a harness change", "write a PR for rockie", or when a recent `[LEARN harness-upstream]` block is waiting.
 ---
 
 # /propose-harness-change — safe self-improvement
@@ -8,18 +8,18 @@ description: Package a harness-level improvement (a new hook, a fixed script, an
 Autonomous research harnesses that let the agent edit themselves tend
 to drift (MINJA / eTAMP memory-poisoning, arXiv 2603.29231's finding
 that "memory scaffolds universally decrease long-horizon reliability",
-the Ouroboros "CLAUDE.md rewrite" footgun). idastone's discipline is
+the Ouroboros "CLAUDE.md rewrite" footgun). rockie's discipline is
 **Generator / Verifier / Updater separation** — nobody is allowed to
 propose, verify, and commit in the same role.
 
 ## The three roles
 
 ### Generator (the proposing agent)
-- Writes the diff against a LOCAL CLONE of the idastone source repo.
+- Writes the diff against a LOCAL CLONE of the rockie source repo.
 - Writes a short rationale: what pattern broke, why the fix composes
   with existing differentiators, what smoke-test assertion(s) prove it.
 - **Never** commits directly. Produces a patch file
-  `~/idastone-proposals/<YYYY-MM-DD-slug>/patch.diff` plus
+  `~/rockie-proposals/<YYYY-MM-DD-slug>/patch.diff` plus
   `rationale.md`, `test.sh` (the specific smoke-test snippet).
 
 ### Verifier (fresh-context audit agent)
@@ -37,7 +37,7 @@ propose, verify, and commit in the same role.
 
 ### Updater (the human)
 - Reviews Verifier report + diff.
-- Runs `bash tests/smoke-test.sh` in the idastone clone — must be green.
+- Runs `bash tests/smoke-test.sh` in the rockie clone — must be green.
 - If everything looks right, runs `scripts/apply_upstream_patch.sh
   <proposal-dir>` which commits the diff locally with the rationale as
   the commit message, then offers `gh pr create`.

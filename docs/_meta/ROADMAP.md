@@ -1,4 +1,4 @@
-<!-- META:idastone-construction -->
+<!-- META:rockie-construction -->
 # Roadmap — outstanding work, prioritized
 
 Updated 2026-04-27. Re-rank when reality changes.
@@ -107,7 +107,7 @@ already updated to expect `gpu.py reconcile`.
 
 ## Credibility artifacts — required before public launch
 
-These convert idastone from "alpha" to "trustable" in OSS terms.
+These convert rockie from "alpha" to "trustable" in OSS terms.
 
 - [ ] MLE-bench Lite submission (target AIDE-current-champion
       comparison)

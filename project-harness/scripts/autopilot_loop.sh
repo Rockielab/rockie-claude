@@ -176,7 +176,7 @@ while true; do
     else
       # Queue empty AND under-target — wake agent to refill
       if [ -x "$ROOT/scripts/notify.sh" ]; then
-        bash "$ROOT/scripts/notify.sh" 2 "idastone queue empty" \
+        bash "$ROOT/scripts/notify.sh" 2 "rockie queue empty" \
           "Autopilot is idle — queue empty and under target. Run /queue-refill or add items manually." \
           "queue-empty-$ITERATION" >/dev/null 2>&1 || true
       fi

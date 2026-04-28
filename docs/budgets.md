@@ -1,6 +1,6 @@
 # Budget mechanisms
 
-idastone tracks four budget dimensions. All auto-increment (no manual
+rockie tracks four budget dimensions. All auto-increment (no manual
 accounting needed). Caps are opt-in — leave a dimension absent from
 `.claude/budget.toml` to disable enforcement for that dimension.
 
@@ -37,7 +37,7 @@ wallclock_s = 28800       # 8h session cap
 dollars     = 50.00       # separate, tracks RunPod spend only
 ```
 
-### Future idastone-as-a-platform (cloud-hosted autonomous runs)
+### Future rockie-as-a-platform (cloud-hosted autonomous runs)
 
 All four ceilings matter. tool_calls additionally caps runaway
 hook-loop bugs. Add reasonable defaults to the platform-level config
@@ -58,7 +58,7 @@ Check via `budget.py status`; reset per-scope via `budget.py reset`.
 
 ## What's NOT tracked
 
-- **Real token counts from the LLM.** idastone doesn't have access to
+- **Real token counts from the LLM.** rockie doesn't have access to
   Claude's token counter, so the token dimension uses a bytes-per-token
   proxy. If your use case needs exact token accounting, plug in a
   tokenizer and replace `cmd_tick_tokens` in `scripts/budget.py`.

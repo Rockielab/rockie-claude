@@ -11,7 +11,7 @@ labels: port
 
 **What it does** (2-3 sentences)
 
-**How it composes with idastone's existing differentiators**
+**How it composes with rockie's existing differentiators**
 <!-- Must compose WITH, not replace, any of:
      pre-run audit agent, FTS5 [LEARN] DB, waterfall,
      pre-experiment checklist, ntfy, living-doc pattern,

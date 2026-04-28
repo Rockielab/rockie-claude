@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""gpu.py — multi-provider GPU router for idastone.
+"""gpu.py — multi-provider GPU router for rockie.
 
 The "tool" the agent reaches for when it needs a GPU. Same verbs as
 runpod.py but iterates every configured provider:
@@ -183,7 +183,7 @@ def _db() -> sqlite3.Connection:
 
 
 def _project_name() -> str:
-    return os.environ.get("IDASTONE_PROJECT") or pathlib.Path.cwd().name
+    return os.environ.get("ROCKIE_PROJECT") or pathlib.Path.cwd().name
 
 
 def _persist_created_pod(pod: Pod, spec: SpotSpec, hours_estimate: float) -> None:
@@ -910,7 +910,7 @@ def _add_providers_arg(p: argparse.ArgumentParser) -> None:
 
 
 def _check_gpu_mode() -> int | None:
-    """Honor IDASTONE_GPU_MODE. Return an exit code to short-circuit
+    """Honor ROCKIE_GPU_MODE. Return an exit code to short-circuit
     main() if the mode opts out of the router; None to continue.
 
     Modes:
@@ -920,12 +920,12 @@ def _check_gpu_mode() -> int | None:
       "none"          — no GPU layer at all. Smoke / docs / autopilot
                         without compute provisioning.
     """
-    mode = (os.environ.get("IDASTONE_GPU_MODE", "router") or "router").strip().lower()
+    mode = (os.environ.get("ROCKIE_GPU_MODE", "router") or "router").strip().lower()
     if mode in ("router", ""):
         return None
     if mode == "custom":
         print(
-            "[gpu] IDASTONE_GPU_MODE=custom — bypassing the cross-provider router.\n"
+            "[gpu] ROCKIE_GPU_MODE=custom — bypassing the cross-provider router.\n"
             "      Your custom GPU setup is documented in .claude/gpu-custom.md\n"
             "      (or run /gpu-custom-setup if you haven't completed onboarding).\n"
             "      For agent-driven GPU operations in custom mode, use the\n"
@@ -935,12 +935,12 @@ def _check_gpu_mode() -> int | None:
         return 0
     if mode == "none":
         print(
-            "[gpu] IDASTONE_GPU_MODE=none — GPU layer disabled.\n"
-            "      Set IDASTONE_GPU_MODE=router (or unset) in .env to enable.",
+            "[gpu] ROCKIE_GPU_MODE=none — GPU layer disabled.\n"
+            "      Set ROCKIE_GPU_MODE=router (or unset) in .env to enable.",
             file=sys.stderr,
         )
         return 0
-    print(f"[gpu] unknown IDASTONE_GPU_MODE={mode!r}; valid: router | custom | none", file=sys.stderr)
+    print(f"[gpu] unknown ROCKIE_GPU_MODE={mode!r}; valid: router | custom | none", file=sys.stderr)
     return 2
 
 
@@ -978,7 +978,7 @@ def main() -> int:
     cp.add_argument("--volume-gb", type=int, default=40)
     cp.add_argument("--disk-gb", type=int, default=40)
     cp.add_argument("--image", default="")
-    cp.add_argument("--name", default="idastone-spot")
+    cp.add_argument("--name", default="rockie-spot")
     cp.add_argument("--env", nargs="*", default=[], help="KEY=VALUE pairs")
     cp.add_argument("--secure", action="store_true", help="(RunPod) use SECURE-cloud only")
     cp.add_argument("--min-vcpu", type=int, default=4)

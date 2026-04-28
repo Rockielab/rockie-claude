@@ -1,7 +1,7 @@
-# ─── idastone repo .gitignore ─────────────────────────────────────────────
-# This file protects the idastone repo itself from accidental leakage by
+# ─── rockie repo .gitignore ─────────────────────────────────────────────
+# This file protects the rockie repo itself from accidental leakage by
 # contributors. For the file that gets merged into a USER's project on
-# install, see install-assets/gitignore.idastone.
+# install, see install-assets/gitignore.rockie.
 
 # Python
 __pycache__/
@@ -88,10 +88,10 @@ lightning_logs/
 **/.claude/.state/
 .team-runs/
 
-# Dogfood / development runtime at the idastone repo root — created when
+# Dogfood / development runtime at the rockie repo root — created when
 # a developer runs claude or smoke-test from inside this checkout.
 /.claude/
-/.idastone/
+/.rockie/
 /project-harness/.state/
 /project-harness/memory/workflow.db
 /project-harness/memory/workflow.db-*

@@ -1,9 +1,14 @@
-# idastone
+# rockie
 
-**The autonomous research harness that catches bugs before you burn GPU
+**the AI research harness that rocks.**
+
+Inspired by Project Hail Mary — the alien research partner you
+couldn't have built the answer without.
+
+rockie is an autonomous research harness that catches bugs before you burn GPU
 time, notices when it's stuck, tracks whether its predictions were
 right, and tells you honestly whether the idea was wrong or just the
-implementation.**
+implementation.
 
 A Claude Code + Claude Agent SDK harness for autonomous ML research.
 Hooks install into your project; your agent gains a pre-run audit
@@ -17,11 +22,11 @@ SQLite, no API keys except Claude.
 
 ---
 
-## Why idastone
+## Why rockie
 
 Four gaps nobody else in this space has closed. We close all four:
 
-| Gap | How idastone closes it |
+| Gap | How rockie closes it |
 |---|---|
 | **Pre-run code audit** — every other harness reviews *after* a run burns compute | A separate auditor agent reads shapes/gradients/stability *before* launch; `/clean` sentinel + pre-commit-gate hook refuse to commit unexamined diffs |
 | **Semantic-loop detection** — agents spin silently for hours | Port of OpenHands `stuck.py`: 4 loop types (action-repeat, error-repeat, monologue, alternating-cycle at periods 2/3/4). The 5th OpenHands type, `condensation-loop`, is specific to their context-compressor and does not translate to Claude Code's transcript model — documented in `docs/PORTS.md`. |
@@ -56,13 +61,13 @@ Every cycle should make the next cycle better.
 ## Install
 
 ```bash
-git clone https://github.com/saml212/idastone.git ~/idastone
-cd ~/idastone
+git clone https://github.com/saml212/rockie.git ~/rockie
+cd ~/rockie
 ./install.sh ~/path/to/your/research-project
 ```
 
 (The target project argument is required when the clone *is* your working
-directory — without it the installer refuses to install idastone into its
+directory — without it the installer refuses to install rockie into its
 own clone.)
 
 The installer:
@@ -144,7 +149,7 @@ clean-room reimplemented.
   rejected.
 - Run `/clean` before committing — the pre-commit-gate hook enforces it.
 
-**Upstream-back from agents:** if an agent using idastone in your own
+**Upstream-back from agents:** if an agent using rockie in your own
 project discovers a harness-level improvement, it can emit
 `[LEARN harness-upstream] …` during the session. Run
 `/propose-harness-change` later to package the improvement as a
@@ -173,10 +178,10 @@ For users of the harness:
 - [SECURITY.md](SECURITY.md) — threat model + risk surfaces
 - [CHANGELOG.md](CHANGELOG.md) — what changed, by release
 
-For agents and contributors working on idastone itself:
+For agents and contributors working on rockie itself:
 
 - [docs/_meta/README.md](docs/_meta/README.md) — meta-doc index + boundaries (start here)
-- [docs/_meta/PHILOSOPHY.md](docs/_meta/PHILOSOPHY.md) — what idastone is and is not, hard rules
+- [docs/_meta/PHILOSOPHY.md](docs/_meta/PHILOSOPHY.md) — what rockie is and is not, hard rules
 - [docs/_meta/USER_JOURNEYS.md](docs/_meta/USER_JOURNEYS.md) — researcher + agent flows
 - [docs/_meta/FEATURES.md](docs/_meta/FEATURES.md) — exhaustive built / partial / planned list
 - [docs/_meta/ROADMAP.md](docs/_meta/ROADMAP.md) — outstanding work, prioritized

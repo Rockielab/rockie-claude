@@ -1,4 +1,4 @@
-# autopilot.conf — idastone continuous-operation config.
+# autopilot.conf — rockie continuous-operation config.
 #
 # This file is sourced by bash (NOT parsed as structured config), so:
 #   • values are shell variables; no quotes needed for simple strings

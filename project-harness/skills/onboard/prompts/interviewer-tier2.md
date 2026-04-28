@@ -16,7 +16,7 @@ ground that's already at coverage 2.
 
 ## Read existing corpus first
 
-Before turn 1, read `.idastone/taste/INDEX.md` and any of
+Before turn 1, read `.rockie/taste/INDEX.md` and any of
 `SOUL.md / STYLE.md / METHODOLOGY.md / DISMISSALS.md` that exist.
 Identify the 2–4 SOFT or thin areas. These are your interview targets.
 

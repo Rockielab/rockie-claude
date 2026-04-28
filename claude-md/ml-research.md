@@ -1,6 +1,6 @@
 # CLAUDE.md — ML research example
 
-> Example specialization of the idastone template for an ML research repo.
+> Example specialization of the rockie template for an ML research repo.
 > Copy to your project's root as `CLAUDE.md` and edit the `Project` section
 > for your specifics.
 >

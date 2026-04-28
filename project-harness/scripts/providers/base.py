@@ -1,6 +1,6 @@
 """providers/base.py — the Protocol every GPU provider adapter implements.
 
-idastone is an autonomous-run harness: the agent provisions GPUs without a
+rockie is an autonomous-run harness: the agent provisions GPUs without a
 human in the loop. Budget enforcement only works if every provider the
 agent can spend on reports its costs through one uniform shape. This file
 defines that shape.
@@ -124,7 +124,7 @@ class SpotSpec:
     disk_gb: int = 40
     bid: float | None = None  # None → adapter uses provider's current min
     image: str = ""  # provider-default if empty
-    name: str = "idastone-spot"
+    name: str = "rockie-spot"
     ssh_key_id: str | None = None  # required by Prime; some others optional
     region: str | None = None
     env: dict[str, str] = field(default_factory=dict)

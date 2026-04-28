@@ -5,8 +5,8 @@ Five minutes, copy-paste. Assumes macOS/Linux, Claude Code already installed.
 ## 1. Install into your project
 
 ```bash
-git clone https://github.com/saml212/idastone.git ~/idastone
-cd ~/idastone
+git clone https://github.com/saml212/rockie.git ~/rockie
+cd ~/rockie
 ./install.sh /path/to/your/research-project
 ```
 
@@ -20,12 +20,12 @@ The installer:
 
 Generic:
 ```bash
-cp ~/idastone/claude-md/CLAUDE.md.template /path/to/your/project/CLAUDE.md
+cp ~/rockie/claude-md/CLAUDE.md.template /path/to/your/project/CLAUDE.md
 ```
 
 ML research preset (pre-experiment checklist tuned for training runs):
 ```bash
-cp ~/idastone/claude-md/ml-research.md /path/to/your/project/CLAUDE.md
+cp ~/rockie/claude-md/ml-research.md /path/to/your/project/CLAUDE.md
 ```
 
 Edit the `Project` section at the bottom.

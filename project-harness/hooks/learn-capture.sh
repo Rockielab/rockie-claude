@@ -95,7 +95,7 @@ try:
     #
     # Special category 'harness-upstream' is recognized: the agent uses
     # [LEARN harness-upstream] to flag improvements that should flow back
-    # to the idastone repo via /propose-harness-change. It's stored like
+    # to the rockie repo via /propose-harness-change. It's stored like
     # any other learning but can be filtered with category='harness-upstream'.
     pattern = re.compile(
         r'\[LEARN\]\s*([\w][\w\s\-/]*?)\s*:\s*(.+?)'

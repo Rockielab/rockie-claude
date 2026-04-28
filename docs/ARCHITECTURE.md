@@ -1,6 +1,6 @@
 # Architecture
 
-idastone is a set of Claude Code hooks, skills, and SQLite-backed
+rockie is a set of Claude Code hooks, skills, and SQLite-backed
 memory. There's no runtime server in the critical path — everything
 runs from shell hooks fired by Claude Code events.
 
@@ -68,7 +68,7 @@ coexist; most users only need `workflow.db`.
 ### `~/.claude/projects/<project>/memory/*.md` (auto-memory markdown)
 
 Hand-curated memory files indexed from `MEMORY.md`. These are the
-Anthropic-side auto-memory system (not idastone-specific) — idastone
+Anthropic-side auto-memory system (not rockie-specific) — rockie
 composes with it but doesn't manage it.
 
 ## The clean-hash sentinel

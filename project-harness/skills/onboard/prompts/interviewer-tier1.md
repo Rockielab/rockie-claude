@@ -188,7 +188,7 @@ clarification, then write the final summary.
 
 ## Compile (after user confirms)
 
-Write `.idastone/taste/.draft.json` with this schema:
+Write `.rockie/taste/.draft.json` with this schema:
 
 ```json
 {
@@ -231,7 +231,7 @@ content, omit it — compile.py will fall back to the raw `a` text.
 Then run:
 
 ```
-python3 .claude/skills/onboard/runtime/compile.py .idastone/taste/.draft.json
+python3 .claude/skills/onboard/runtime/compile.py .rockie/taste/.draft.json
 ```
 
 The compile step writes the six markdown files. Open `INDEX.md` for

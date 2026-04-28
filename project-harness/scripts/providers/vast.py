@@ -90,7 +90,7 @@ class VastProvider:
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "idastone-vast/0.1 (+https://github.com/saml212/idastone)",
+                "User-Agent": "rockie-vast/0.1 (+https://github.com/saml212/rockie)",
             },
             method=method,
         )

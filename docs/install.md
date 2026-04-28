@@ -21,8 +21,8 @@ python3 --version             # 3.9+
 ## Quick install
 
 ```bash
-git clone https://github.com/saml212/idastone.git
-cd idastone
+git clone https://github.com/saml212/rockie.git
+cd rockie
 ./install.sh
 ```
 
@@ -41,7 +41,7 @@ a time:
 ```bash
 cd /path/to/your/project
 mkdir -p .claude
-cp -a /path/to/idastone/project-harness/. .claude/
+cp -a /path/to/rockie/project-harness/. .claude/
 ```
 
 This gives you `hooks/`, `scripts/`, `skills/`, `memory/schema.sql`,
@@ -58,10 +58,10 @@ python3 .claude/scripts/seed_hard_rules.py # seeds generic harness rules
 
 ```bash
 mkdir -p ~/.claude/{hooks,skills,scripts,teams}
-cp /path/to/idastone/user-harness/hooks/*.sh ~/.claude/hooks/
-cp -a /path/to/idastone/user-harness/scripts/memory ~/.claude/scripts/
-cp -a /path/to/idastone/user-harness/skills/deploy-team ~/.claude/skills/
-cp -a /path/to/idastone/user-harness/teams/. ~/.claude/teams/
+cp /path/to/rockie/user-harness/hooks/*.sh ~/.claude/hooks/
+cp -a /path/to/rockie/user-harness/scripts/memory ~/.claude/scripts/
+cp -a /path/to/rockie/user-harness/skills/deploy-team ~/.claude/skills/
+cp -a /path/to/rockie/user-harness/teams/. ~/.claude/teams/
 ```
 
 Then merge the hooks block from `user-harness/settings.json` into your
@@ -80,9 +80,9 @@ npm install
 ### 5. Drop a CLAUDE.md
 
 ```bash
-cp /path/to/idastone/claude-md/CLAUDE.md.template /path/to/your/project/CLAUDE.md
+cp /path/to/rockie/claude-md/CLAUDE.md.template /path/to/your/project/CLAUDE.md
 # or for ML research:
-# cp /path/to/idastone/claude-md/ml-research.md /path/to/your/project/CLAUDE.md
+# cp /path/to/rockie/claude-md/ml-research.md /path/to/your/project/CLAUDE.md
 ```
 
 Edit the `Project` section for your specifics.
@@ -120,9 +120,9 @@ Your new learning should be at the top.
 ## Uninstall
 
 ```bash
-rm -rf <your-project>/.claude     # or just remove the idastone-specific pieces
+rm -rf <your-project>/.claude     # or just remove the rockie-specific pieces
 rm -rf ~/.claude/teams            # only if you used the Node orchestrator
-# Edit ~/.claude/settings.json to remove the idastone hook entries.
+# Edit ~/.claude/settings.json to remove the rockie hook entries.
 ```
 
 Nothing persists outside those paths.

@@ -67,7 +67,7 @@ class RunPodProvider:
                 # RunPod sits behind Cloudflare; default urllib UA gets a
                 # 1010 access-denied. Identifying like a real client gets
                 # through. (Curl works because its default UA is allowed.)
-                "user-agent": "idastone-runpod/0.2 (+https://github.com/saml212/idastone)",
+                "user-agent": "rockie-runpod/0.2 (+https://github.com/saml212/rockie)",
                 "accept": "application/json",
             },
             method="POST",

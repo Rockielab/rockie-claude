@@ -1,7 +1,7 @@
-<!-- META:idastone-construction -->
+<!-- META:rockie-construction -->
 # User Journeys — what experience the harness delivers
 
-There are two users of idastone: the **researcher** (human) and the
+There are two users of rockie: the **researcher** (human) and the
 **agent** (Claude Code session running in the researcher's project).
 Both must succeed. The harness fails when either's path is unclear.
 
@@ -10,8 +10,8 @@ Both must succeed. The harness fails when either's path is unclear.
 ### Day zero (one-time install)
 
 ```bash
-git clone https://github.com/saml212/idastone.git ~/idastone
-cd ~/idastone
+git clone https://github.com/saml212/rockie.git ~/rockie
+cd ~/rockie
 ./install.sh ~/path/to/your/research-project
 ```
 
@@ -47,7 +47,7 @@ The researcher then:
 7. To upstream a harness improvement found during work: agent emits
    `[LEARN harness-upstream]`; researcher later runs
    `/propose-harness-change`, reviews the verifier's output, opens a
-   PR to saml212/idastone.
+   PR to saml212/rockie.
 
 ### Cost / safety
 

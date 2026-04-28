@@ -381,7 +381,7 @@ def main():
     p.add_argument("--patch", help="comma-separated subset of files to compile",
                    default=None)
     p.add_argument("--out", default=None,
-                   help="output dir (default: .idastone/taste/ next to draft)")
+                   help="output dir (default: .rockie/taste/ next to draft)")
     args = p.parse_args()
 
     draft_path = Path(args.draft).resolve()

@@ -1,6 +1,6 @@
 # ntfy setup (optional)
 
-idastone uses [ntfy.sh](https://ntfy.sh) for push notifications — e.g.
+rockie uses [ntfy.sh](https://ntfy.sh) for push notifications — e.g.
 "experiment crashed," "draft ready for review," "autopilot blocked
 and needs a decision." Free, no account needed, end-to-end encrypted
 if you run your own server.
@@ -42,7 +42,7 @@ export NTFY_TOPIC="myname-autopilot-xxxxxxxxxxxxxxxx"
 Test:
 
 ```bash
-.claude/scripts/notify.sh 2 "idastone test" "Hello from my laptop."
+.claude/scripts/notify.sh 2 "rockie test" "Hello from my laptop."
 ```
 
 Your phone should chime within ~2 seconds.

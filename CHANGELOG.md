@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to idastone are tracked here. Versions follow
+All notable changes to rockie are tracked here. Versions follow
 [SemVer](https://semver.org/) once a `v0.1` is tagged; until then every
 commit on `main` is considered alpha.
 
@@ -22,9 +22,9 @@ commit on `main` is considered alpha.
   `--force`) so one session can't un-claim another's work (audit m-2).
 
 ### Fixed
-- Installer refuses to install idastone into its own clone.
+- Installer refuses to install rockie into its own clone.
 - `YOUR-ORG` placeholder replaced with `saml212` across all docs.
-- "cascade" (old codename) renamed to idastone in Node orchestrator
+- "cascade" (old codename) renamed to rockie in Node orchestrator
   package + lockfile + migration helper.
 - README claim "5 loop types" corrected to 4 — `condensation-loop` is
   OpenHands-specific and not ported.

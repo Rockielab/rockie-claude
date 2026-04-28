@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """EXAMPLE: project-specific seeds for an ML research repo.
 
-Copy this file into your own repo's .claude/scripts/ (NOT the idastone
+Copy this file into your own repo's .claude/scripts/ (NOT the rockie
 default) and edit it to encode your project's hard-won lessons.
 
 Seeds live in the same workflow.db as the harness defaults — they're

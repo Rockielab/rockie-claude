@@ -1,8 +1,8 @@
 # CLAUDE.md
 
-> Generic idastone template. Drop this at the root of your project as
+> Generic rockie template. Drop this at the root of your project as
 > `CLAUDE.md`, then edit the `Project` section at the bottom with your
-> specifics. The sections above the divider are the idastone harness
+> specifics. The sections above the divider are the rockie harness
 > contract — don't rip them out unless you know what you're disabling.
 
 ## Where things go (plug-and-play map)
@@ -61,8 +61,8 @@ project (a new hook, a fix to an existing script, a useful skill), emit:
 The `learn-capture.sh` Stop hook files this in the same DB as ordinary
 `[LEARN]` blocks, but tagged so `/propose-harness-change` can surface it
 later. When the user reviews, you can run `/propose-harness-change` to
-package the diff as a PR against the idastone source repo. Other users
-of idastone get the benefit; you get credit; the ecosystem grows. See
+package the diff as a PR against the rockie source repo. Other users
+of rockie get the benefit; you get credit; the ecosystem grows. See
 `CONTRIBUTING.md` for the PR flow.
 
 Guardrail: the agent does NOT auto-push. The Generator/Verifier/Updater
@@ -148,7 +148,7 @@ Only build what survives all four stages.
 
 ## Hard Rules (harness-level)
 
-These are generic, apply to any project using idastone:
+These are generic, apply to any project using rockie:
 
 - Verify before claiming. Use web search or research agents.
 - Audit code with a separate agent before running.

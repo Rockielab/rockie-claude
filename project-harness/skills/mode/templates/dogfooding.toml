@@ -1,4 +1,4 @@
-# dogfooding — for working on idastone itself, or a fresh user testing
+# dogfooding — for working on rockie itself, or a fresh user testing
 # the harness. Tight budgets, fast cycles, gates loosened.
 name = "dogfooding"
 description = "Harness self-modification or first-run testing. Small budgets, fast cycles."

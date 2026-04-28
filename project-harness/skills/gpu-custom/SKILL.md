@@ -1,12 +1,12 @@
 ---
 name: gpu-custom
-description: Runtime skill for users in IDASTONE_GPU_MODE=custom — invoked when the user (or agent) needs to do anything GPU-related (provision, connect, check status, check cost, terminate) in a project where idastone's cross-provider router is bypassed in favor of the user's own setup. Reads `.claude/gpu-custom.md` (populated by /gpu-custom-setup) for the user's documented flow and follows it. Replaces /runpod, /vast, /prime, /datacrunch, and /gpu-spend in custom mode — those skills route to gpu.py which exits gracefully when IDASTONE_GPU_MODE is not 'router'. If `.claude/gpu-custom.md` doesn't exist, redirect to /gpu-custom-setup first.
+description: Runtime skill for users in ROCKIE_GPU_MODE=custom — invoked when the user (or agent) needs to do anything GPU-related (provision, connect, check status, check cost, terminate) in a project where rockie's cross-provider router is bypassed in favor of the user's own setup. Reads `.claude/gpu-custom.md` (populated by /gpu-custom-setup) for the user's documented flow and follows it. Replaces /runpod, /vast, /prime, /datacrunch, and /gpu-spend in custom mode — those skills route to gpu.py which exits gracefully when ROCKIE_GPU_MODE is not 'router'. If `.claude/gpu-custom.md` doesn't exist, redirect to /gpu-custom-setup first.
 ---
 
 # /gpu-custom — runtime GPU operations in custom mode
 
-When `IDASTONE_GPU_MODE=custom`, the agent doesn't drive GPU
-provisioning through idastone's router. Instead, it follows the
+When `ROCKIE_GPU_MODE=custom`, the agent doesn't drive GPU
+provisioning through rockie's router. Instead, it follows the
 user's own flow as documented in `.claude/gpu-custom.md` (populated
 once by `/gpu-custom-setup`).
 
@@ -16,12 +16,12 @@ This skill is the agent's gateway to that flow.
 
 ```bash
 # Are we in custom mode?
-case "${IDASTONE_GPU_MODE:-router}" in
+case "${ROCKIE_GPU_MODE:-router}" in
   custom) ;;  # ok, proceed
   router)
-    echo "[gpu-custom] IDASTONE_GPU_MODE=router — use /gpu-spend, /runpod, /vast, etc. instead"
+    echo "[gpu-custom] ROCKIE_GPU_MODE=router — use /gpu-spend, /runpod, /vast, etc. instead"
     exit 0 ;;
-  *) echo "[gpu-custom] IDASTONE_GPU_MODE=${IDASTONE_GPU_MODE} — not custom; nothing to do"; exit 0 ;;
+  *) echo "[gpu-custom] ROCKIE_GPU_MODE=${ROCKIE_GPU_MODE} — not custom; nothing to do"; exit 0 ;;
 esac
 
 # Is the setup file present?
@@ -71,7 +71,7 @@ a cost subsection), respond honestly:
 > Your `.claude/gpu-custom.md` doesn't document a cost-tracking flow.
 > Want me to add it now? (You'd paste the command or URL you check.)
 
-Don't make up a flow. Don't fall back to idastone's router-mode
+Don't make up a flow. Don't fall back to rockie's router-mode
 commands like `gpu.py cost` — those will exit with a "custom mode
 bypassed" message anyway.
 
@@ -79,7 +79,7 @@ bypassed" message anyway.
 
 If the user has a way to surface live $/hr (URL, CLI), and it's
 documented in §4 Monitor → Cost, you can periodically query it and
-write to idastone's `budget.py` so the dollars ceiling stays honest:
+write to rockie's `budget.py` so the dollars ceiling stays honest:
 
 ```bash
 # In a wrapper the user manually invokes (NOT auto-fired by hooks

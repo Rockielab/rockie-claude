@@ -1,14 +1,14 @@
 ---
 name: gpu-custom-setup
-description: One-time onboarding flow for users who set IDASTONE_GPU_MODE=custom (i.e., they have their own GPU setup — own AWS account, on-prem cluster, SSH tunnel to a workstation, university HPC, custom orchestration — instead of using idastone's RunPod/Vast/Prime/Verda router). Trigger this when (1) the user mentions GPU/training/provisioning, (2) `echo $IDASTONE_GPU_MODE` returns `custom`, AND (3) `.claude/gpu-custom.md` doesn't exist or is empty. Walks the user through their auth/provision/connect/monitor/terminate flow and saves it to .claude/gpu-custom.md so future agent sessions reuse the saved flow without re-asking. Run this AT MOST ONCE per project.
+description: One-time onboarding flow for users who set ROCKIE_GPU_MODE=custom (i.e., they have their own GPU setup — own AWS account, on-prem cluster, SSH tunnel to a workstation, university HPC, custom orchestration — instead of using rockie's RunPod/Vast/Prime/Verda router). Trigger this when (1) the user mentions GPU/training/provisioning, (2) `echo $ROCKIE_GPU_MODE` returns `custom`, AND (3) `.claude/gpu-custom.md` doesn't exist or is empty. Walks the user through their auth/provision/connect/monitor/terminate flow and saves it to .claude/gpu-custom.md so future agent sessions reuse the saved flow without re-asking. Run this AT MOST ONCE per project.
 ---
 
 # /gpu-custom-setup — onboard a user with their own GPU setup
 
-idastone's default GPU layer is the cross-provider router (`gpu.py`).
+rockie's default GPU layer is the cross-provider router (`gpu.py`).
 But some users have their own setup they prefer to drive themselves —
 their own AWS account, on-prem cluster, university HPC quota, custom
-SSH tunnel, etc. They opt out by setting `IDASTONE_GPU_MODE=custom`,
+SSH tunnel, etc. They opt out by setting `ROCKIE_GPU_MODE=custom`,
 and the agent reaches for THIS skill on first GPU need to learn how
 THEY provision compute.
 
@@ -18,7 +18,7 @@ Run these BEFORE invoking the skill. If any fail, do not proceed.
 
 ```bash
 # 1. Are we in custom mode?
-test "$(echo "${IDASTONE_GPU_MODE:-router}")" = "custom" || exit 0
+test "$(echo "${ROCKIE_GPU_MODE:-router}")" = "custom" || exit 0
 
 # 2. Has setup already been done?
 test -s .claude/gpu-custom.md && {
@@ -97,7 +97,7 @@ If the user mentions any of these, capture in their own subsections:
 - **Preemption** — does their setup get preempted? How do they
   handle it?
 - **Budget tracking** — do they have a way to track $/hr that's
-  accruing? Should idastone's `budget.py` integrate?
+  accruing? Should rockie's `budget.py` integrate?
 
 ## Save format
 
@@ -157,7 +157,7 @@ leisure — but don't block on those answers.
 
 - Don't run any of the user's pasted commands during onboarding —
   this is information capture, not execution.
-- Don't add idastone's RunPod/Vast/Prime opinions into the saved
+- Don't add rockie's RunPod/Vast/Prime opinions into the saved
   file. Custom mode means custom; respect their setup.
 - Don't try to "wire up" their setup to `budget.py` automatically.
   Mention budget integration as an optional next step they can pursue

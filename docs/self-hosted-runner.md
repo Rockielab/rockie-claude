@@ -7,7 +7,7 @@ Claude-powered PR reviewer using your local Claude Max subscription
 (no API key, no usage charge), register your always-on machine as a
 self-hosted runner.
 
-idastone ships two workflows designed for this split:
+rockie ships two workflows designed for this split:
 
 | Workflow | Runner | Purpose |
 |---|---|---|
@@ -36,7 +36,7 @@ tar xzf runner.tar.gz && rm runner.tar.gz
 Get a registration token (expires in 1 hour):
 
 ```bash
-gh api -X POST repos/saml212/idastone/actions/runners/registration-token \
+gh api -X POST repos/saml212/rockie/actions/runners/registration-token \
   | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])'
 ```
 
@@ -44,7 +44,7 @@ Configure with that token:
 
 ```bash
 ./config.sh \
-  --url https://github.com/saml212/idastone \
+  --url https://github.com/saml212/rockie \
   --token <PASTE_TOKEN_HERE> \
   --labels self-hosted,macos,claude-review \
   --unattended
@@ -90,7 +90,7 @@ cd ~/actions-runner
 ## Security considerations
 
 - **Self-hosted runners on public repos are a known vulnerability.**
-  A hostile PR can run arbitrary code on the runner. idastone is
+  A hostile PR can run arbitrary code on the runner. rockie is
   *private*, so this is fine — but if you ever flip the repo public,
   either unregister the self-hosted runner or restrict to
   `pull_request_target` from known contributors only.
@@ -98,7 +98,7 @@ cd ~/actions-runner
   `claude` authentication, shell history, and any env vars. Don't run
   commands in CI that you wouldn't run yourself.
 - Workflow scripts go through `$GITHUB_WORKSPACE` which is a fresh
-  checkout per job; they can't see `~/idastone-proposals/` or other
+  checkout per job; they can't see `~/rockie-proposals/` or other
   private state unless you explicitly mount it.
 
 ## Claude Max as the PR reviewer — why this works
@@ -126,5 +126,5 @@ the Mac mini comes back up.
   but with a minimal `PATH`. Add `/usr/local/bin` (or wherever
   `claude` lives) to the workflow's env or to the runner's
   `.env` file.
-- **Queued job never starts** — `gh api repos/saml212/idastone/actions/runners`
+- **Queued job never starts** — `gh api repos/saml212/rockie/actions/runners`
   to confirm the runner is registered and online.

@@ -1,9 +1,9 @@
-# ─── idastone harness block — managed by install.sh ────────────────────
+# ─── rockie harness block — managed by install.sh ────────────────────
 # Do not edit between the BEGIN and END markers. install.sh will re-merge
 # this block on upgrades. Rules outside the markers are yours and are
 # preserved.
 
-# BEGIN idastone
+# BEGIN rockie
 # Harness runtime — per-project state, never commit
 .claude/memory/workflow.db
 .claude/memory/workflow.db-*
@@ -60,9 +60,9 @@ docs/_internal/
 NOTES_PRIVATE*
 
 # Researcher taste corpus — personal, like .env. Opt-in to commit by
-# removing the `.idastone/taste/` line below. Drafts and archives stay
+# removing the `.rockie/taste/` line below. Drafts and archives stay
 # ignored even if the user opts in to committing the corpus itself.
-.idastone/taste/
-.idastone/taste/.draft.json
-.idastone/taste/.archive/
-# END idastone
+.rockie/taste/
+.rockie/taste/.draft.json
+.rockie/taste/.archive/
+# END rockie

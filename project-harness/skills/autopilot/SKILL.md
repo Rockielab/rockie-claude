@@ -1,6 +1,6 @@
 ---
 name: autopilot
-description: Continuous-operation mode for idastone — runs the experiment queue autonomously, using Zero-Cost Monitoring ($0 LLM cost during training), anti-burn exponential cooldown on failures, and ntfy to wake the human only when a decision is needed. Use when you want agent-driven research to proceed for days without human input. Not appropriate for unproven projects — only enable after you have a populated queue, budget ceilings, and a working launcher.
+description: Continuous-operation mode for rockie — runs the experiment queue autonomously, using Zero-Cost Monitoring ($0 LLM cost during training), anti-burn exponential cooldown on failures, and ntfy to wake the human only when a decision is needed. Use when you want agent-driven research to proceed for days without human input. Not appropriate for unproven projects — only enable after you have a populated queue, budget ceilings, and a working launcher.
 ---
 
 # /autopilot — days-long autonomous operation
@@ -58,7 +58,7 @@ loop forever:
 ## Cost model (measured pattern from arXiv 2604.05854)
 
 Conventional polling (LLM call per tick): ~$1.60/24h.
-idastone ZCM polling (LLM only on event): ~$0.08/24h.
+rockie ZCM polling (LLM only on event): ~$0.08/24h.
 
 ## What autopilot does NOT do
 

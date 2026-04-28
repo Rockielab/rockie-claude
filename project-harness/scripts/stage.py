@@ -7,7 +7,7 @@ phases of a research project want different context. Stage 1 agents
 don't need to see the full creative plan; stage 4 (ablation) agents
 should NOT see "propose new variants" prompts.
 
-Stages are idastone-conventional:
+Stages are rockie-conventional:
     draft          — first attempt, anything goes
     baseline-tune  — change hyperparams, not architecture
     creative       — novel architectural variants, multi-day runs OK

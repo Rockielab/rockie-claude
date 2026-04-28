@@ -1,6 +1,6 @@
 # GPU provider setup
 
-idastone provisions GPUs through the cross-provider router at
+rockie provisions GPUs through the cross-provider router at
 `scripts/gpu.py`. To use it, set up at least one provider's credentials
 in your project's `.env` file. **Two or more providers** unlocks
 preemption survivability — when one provider's spot pool runs out or

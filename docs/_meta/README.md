@@ -1,16 +1,16 @@
-# META — for agents constructing idastone itself
+# META — for agents constructing rockie itself
 
-> **Read this first if you are an agent or contributor working ON idastone (the harness).**
-> If you are an agent USING idastone in a research project, you want
+> **Read this first if you are an agent or contributor working ON rockie (the harness).**
+> If you are an agent USING rockie in a research project, you want
 > the user-facing docs at the repo root: `README.md`, `docs/ARCHITECTURE.md`,
 > `docs/quickstart.md`, `docs/PORTS.md`. **Don't confuse the two.**
 
 ## What this directory is
 
-This is the **meta-documentation** — the durable record of why idastone
+This is the **meta-documentation** — the durable record of why rockie
 exists, what shape it has, what's built, what's outstanding, and the
 explicit lessons from its construction so far. It is committed to the
-repo (not gitignored) because future agents extending idastone need it.
+repo (not gitignored) because future agents extending rockie need it.
 
 ## What this directory is NOT
 
@@ -21,7 +21,7 @@ Below that level, this directory talks about *building* the harness;
 the user-facing tree talks about *using* it.
 
 If you are tempted to put implementation details in user-facing docs,
-or marketing copy in here — stop. Crossover is "what idastone is and
+or marketing copy in here — stop. Crossover is "what rockie is and
 why," not "how it works internally" or "what to ship next."
 
 ## Contents
@@ -70,7 +70,7 @@ The following lives in **both** this meta-tree and the user-facing tree:
 ## Tag convention
 
 Files in `docs/_meta/` start with a comment block flagging their
-purpose. Tools and agents can grep for `<!-- META:idastone-construction -->`
+purpose. Tools and agents can grep for `<!-- META:rockie-construction -->`
 to identify meta-docs vs user docs unambiguously.
 
 ## When NOT to read this

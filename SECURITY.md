@@ -2,7 +2,7 @@
 
 ## Scope
 
-idastone is a local-first harness. It does not listen on a network, does
+rockie is a local-first harness. It does not listen on a network, does
 not handle user auth, and has no server component. Its threat model is
 therefore narrow: adversarial LLM output, malicious contributor PRs, and
 compromised third-party services (ntfy.sh).

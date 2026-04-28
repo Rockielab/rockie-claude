@@ -1,4 +1,4 @@
-<!-- META:idastone-construction -->
+<!-- META:rockie-construction -->
 # Features — exhaustive built / partial / planned list
 
 Authoritative status of every shipped, in-flight, and planned piece.
@@ -90,7 +90,7 @@ Last big sweep: 2026-04-27.
 - `claude-md/ml-research.md` — ML preset with predicted_delta requirement + [DEAD-END] mention
 - `examples/seed_example_ml_research.py` — ML-specific rules a user can adapt
 - `examples/launch_experiment.example.sh` — launcher template (autopilot.conf documented)
-- `install-assets/gitignore.idastone` — block merged into user .gitignore (BEGIN/END markers)
+- `install-assets/gitignore.rockie` — block merged into user .gitignore (BEGIN/END markers)
 - `project-harness/budget.toml.example` — commented-out template
 - `project-harness/autopilot.conf.example` — documents allow-listed keys
 
@@ -177,7 +177,7 @@ Last big sweep: 2026-04-27.
 - Failure-taxonomy dataset publication (after C4 enum upgrade lands)
 
 ### Explicitly de-scoped (don't revisit)
-- Paper / LaTeX writeup pipelines (out of scope; idastone is research, not paper-gen)
+- Paper / LaTeX writeup pipelines (out of scope; rockie is research, not paper-gen)
 - Full RAG over a paper corpus (PaperQA2-style — overkill until a fixed corpus exists)
 - smolagents AST sandbox (not a real sandbox per author admission)
 - AutoGen / CrewAI orchestration DSL (Claude Agent SDK covers it)

@@ -27,7 +27,7 @@ fi
 # Skip in non-router modes — no provider state for THIS hook to reconcile.
 # (Custom-mode users own their own accounting; they can wire their own
 # reconcile in their gpu-custom.md flow if they want.)
-case "${IDASTONE_GPU_MODE:-router}" in
+case "${ROCKIE_GPU_MODE:-router}" in
   custom|none) exit 0 ;;
 esac
 # Skip if no provider configured — no point querying.
