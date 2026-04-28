@@ -58,4 +58,11 @@ _private/
 docs/_internal/
 **/*.private.md
 NOTES_PRIVATE*
+
+# Researcher taste corpus — personal, like .env. Opt-in to commit by
+# removing the `.idastone/taste/` line below. Drafts and archives stay
+# ignored even if the user opts in to committing the corpus itself.
+.idastone/taste/
+.idastone/taste/.draft.json
+.idastone/taste/.archive/
 # END idastone

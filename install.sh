@@ -233,6 +233,23 @@ if [ ! -f "$TARGET_PROJECT/CLAUDE.md" ]; then
   echo "──────────────────────────────────────────────────────────────"
 fi
 
+# ── /onboard nudge ───────────────────────────────────────────────────────
+# The taste corpus is what makes idastone distinctive. Surface it
+# explicitly at install time alongside CLAUDE.md.
+if [ ! -d "$TARGET_PROJECT/.idastone/taste" ]; then
+  echo ""
+  echo "──────────────────────────────────────────────────────────────"
+  echo "recommended — capture your research taste:"
+  echo ""
+  echo "  In your first \`claude\` session, run:  /onboard"
+  echo ""
+  echo "  5–7 questions, ~5 minutes. Produces a \`.idastone/taste/\`"
+  echo "  corpus (SOUL.md, METHODOLOGY.md, DISMISSALS.md, etc.) that"
+  echo "  agents auto-load every session. Adds \`/onboard --deep\` for"
+  echo "  voice-first laddering."
+  echo "──────────────────────────────────────────────────────────────"
+fi
+
 # ── GPU provider credential wizard ───────────────────────────────────────
 # Walk the user through configuring at least one GPU provider — the
 # agent can't provision GPUs without one, and 2+ unlocks preemption
