@@ -84,8 +84,17 @@ lightning_logs/
 **/.claude/memory/workflow.db-*
 **/.claude/memory/hook.log*
 **/.claude/memory/ntfy_last_seen
-**/.claude/.state/clean-ok-*
+**/.claude/memory/rules-compiled.md
+**/.claude/.state/
 .team-runs/
+
+# Dogfood / development runtime at the idastone repo root — created when
+# a developer runs claude or smoke-test from inside this checkout.
+/.claude/
+/.idastone/
+/project-harness/.state/
+/project-harness/memory/workflow.db
+/project-harness/memory/workflow.db-*
 
 # Per-project autopilot config is shell-sourced → never commit
 **/.claude/autopilot.conf
