@@ -37,6 +37,8 @@ LOG_MD = REPO / "EXPERIMENT_LOG.md"
 CLAUDE_MD = REPO / "CLAUDE.md"
 TASTE_DIR = REPO / ".idastone" / "taste"
 TASTE_INDEX = TASTE_DIR / "INDEX.md"
+MODES_DIR = TASTE_DIR / "modes"
+MODE_ACTIVE = MODES_DIR / "_active"
 
 OK = "✓"
 WARN = "⚠"
@@ -164,6 +166,70 @@ def tail_file(path: pathlib.Path, lines: int = 10) -> Optional[str]:
     return "\n".join(content[-lines:])
 
 
+def _load_active_mode() -> tuple[Optional[dict], list]:
+    """Read modes/_active and return (parsed_mode, warnings).
+    Returns (None, []) when no mode is set or files are missing.
+    Warnings are advisory strings the report should surface.
+    """
+    if not MODE_ACTIVE.exists():
+        return None, []
+    name = (MODE_ACTIVE.read_text().strip().splitlines() or [""])[0]
+    if not name:
+        return None, []
+    path = MODES_DIR / f"{name}.toml"
+    if not path.exists():
+        return None, [f"_active names '{name}' but {path.name} is missing"]
+    try:
+        import tomllib
+        with path.open("rb") as f:
+            mode = tomllib.load(f)
+    except Exception as exc:  # noqa: BLE001 — surface any parse failure
+        return None, [f"failed to parse {path.name}: {exc}"]
+    return mode, _mode_conflicts(mode)
+
+
+def _mode_conflicts(mode: dict) -> list:
+    """Surface obvious mismatches between mode policy and live env."""
+    out = []
+    hw = mode.get("hardware") or {}
+    pref = hw.get("preferred_provider")
+    if pref:
+        env_var = {
+            "runpod": "RUNPOD_API_KEY",
+            "vast": "VAST_API_KEY",
+            "prime": "PRIME_API_KEY",
+            "verda": "DATACRUNCH_CLIENT_ID",
+        }.get(pref)
+        if env_var and not os.environ.get(env_var, "").strip():
+            out.append(f"mode prefers '{pref}' but {env_var} is unset")
+    if hw.get("spot_only") and os.environ.get("IDASTONE_GPU_MODE") == "none":
+        out.append("mode requires spot GPUs but IDASTONE_GPU_MODE=none")
+    return out
+
+
+def _format_mode_block(mode: dict) -> str:
+    """Compact mode summary for the SessionStart context."""
+    lines = [f"**mode**: `{mode.get('name', '?')}`"]
+    desc = (mode.get("description") or "").strip()
+    if desc:
+        lines.append(f"_{desc}_")
+    for sec in ("hardware", "risk", "output", "workflow", "deadline"):
+        block = mode.get(sec)
+        if not block:
+            continue
+        kvs = ", ".join(f"{k}={_fmt_v(v)}" for k, v in block.items())
+        lines.append(f"- **[{sec}]** {kvs}")
+    return "\n".join(lines)
+
+
+def _fmt_v(v):
+    if isinstance(v, list):
+        return "[" + ", ".join(str(x) for x in v) + "]"
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    return str(v)
+
+
 def _parse_soft_topics(idx_md: str) -> list:
     """Extract the soft_topics list from INDEX.md frontmatter.
     Returns [] if absent or unparseable. Intentionally minimal — no yaml
@@ -226,6 +292,26 @@ def render() -> str:
         out.append("## Researcher")
         out.append(f"- {MISS} no `taste/` corpus found. Run `/onboard` to set one up "
                    "— 5–7 questions, ~5 minutes, voice optional.")
+        out.append("")
+
+    # ── Active mode ────────────────────────────────────────────────────
+    # Modes are small TOML overlays on the central corpus. The active
+    # one carries this session's operational policy (deadline, scope
+    # lock, hardware prefs). Load it after the identity layer so the
+    # agent sees identity → mode → operational state in that order.
+    mode, mode_warnings = _load_active_mode()
+    if mode is not None:
+        out.append("## Active mode")
+        out.append("")
+        out.append(_format_mode_block(mode))
+        for w in mode_warnings:
+            out.append(f"- {WARN} {w}")
+        out.append("")
+    elif MODES_DIR.exists():
+        out.append("## Active mode")
+        out.append(f"- {MISS} modes/ exists but no `_active` set. "
+                   "Run `python3 .claude/skills/mode/runtime/mode.py list` "
+                   "to choose one.")
         out.append("")
 
     # ── Environment ─────────────────────────────────────────────────────

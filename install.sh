@@ -250,6 +250,15 @@ if [ ! -d "$TARGET_PROJECT/.idastone/taste" ]; then
   echo "──────────────────────────────────────────────────────────────"
 fi
 
+# ── seed mode templates ──────────────────────────────────────────────────
+# Modes are swappable operational overlays (paper-crunch, exploratory,
+# dogfooding, learning, default) on top of the central taste corpus.
+# Copy templates non-destructively so the user can switch between modes
+# without first running an interview.
+if [ -d "$TARGET_PROJECT/.claude/skills/mode/templates" ]; then
+  python3 "$TARGET_PROJECT/.claude/skills/mode/runtime/mode.py" seed >/dev/null 2>&1 || true
+fi
+
 # ── GPU provider credential wizard ───────────────────────────────────────
 # Walk the user through configuring at least one GPU provider — the
 # agent can't provision GPUs without one, and 2+ unlocks preemption
