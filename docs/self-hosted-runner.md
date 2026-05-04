@@ -36,7 +36,7 @@ tar xzf runner.tar.gz && rm runner.tar.gz
 Get a registration token (expires in 1 hour):
 
 ```bash
-gh api -X POST repos/saml212/rockie/actions/runners/registration-token \
+gh api -X POST repos/saml212/rockie-claude/actions/runners/registration-token \
   | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])'
 ```
 
@@ -44,7 +44,7 @@ Configure with that token:
 
 ```bash
 ./config.sh \
-  --url https://github.com/saml212/rockie \
+  --url https://github.com/saml212/rockie-claude \
   --token <PASTE_TOKEN_HERE> \
   --labels self-hosted,macos,claude-review \
   --unattended
@@ -126,5 +126,5 @@ the Mac mini comes back up.
   but with a minimal `PATH`. Add `/usr/local/bin` (or wherever
   `claude` lives) to the workflow's env or to the runner's
   `.env` file.
-- **Queued job never starts** — `gh api repos/saml212/rockie/actions/runners`
+- **Queued job never starts** — `gh api repos/saml212/rockie-claude/actions/runners`
   to confirm the runner is registered and online.

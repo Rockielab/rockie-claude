@@ -21,8 +21,8 @@ python3 --version             # 3.9+
 ## Quick install
 
 ```bash
-git clone https://github.com/saml212/rockie.git
-cd rockie
+git clone https://github.com/saml212/rockie-claude.git
+cd rockie-claude
 ./install.sh
 ```
 

@@ -63,8 +63,8 @@ Add this block to `docs/PORTS.md` in the right tier.
 ## Building
 
 ```bash
-git clone https://github.com/saml212/rockie.git
-cd rockie
+git clone https://github.com/saml212/rockie-claude.git
+cd rockie-claude
 bash tests/smoke-test.sh        # run the full smoke test
 bash install.sh /tmp/scratch    # dry-run install against a scratch project
 ```

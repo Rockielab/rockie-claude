@@ -10,8 +10,8 @@ Both must succeed. The harness fails when either's path is unclear.
 ### Day zero (one-time install)
 
 ```bash
-git clone https://github.com/saml212/rockie.git ~/rockie
-cd ~/rockie
+git clone https://github.com/saml212/rockie-claude.git ~/rockie-claude
+cd ~/rockie-claude
 ./install.sh ~/path/to/your/research-project
 ```
 
@@ -47,7 +47,7 @@ The researcher then:
 7. To upstream a harness improvement found during work: agent emits
    `[LEARN harness-upstream]`; researcher later runs
    `/propose-harness-change`, reviews the verifier's output, opens a
-   PR to saml212/rockie.
+   PR to saml212/rockie-claude.
 
 ### Cost / safety
 

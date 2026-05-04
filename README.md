@@ -1,13 +1,18 @@
-# rockie
+# rockie-claude
 
-**An Autonomous AI research assistant that rocks.**
+**An autonomous AI research harness for Claude Code.**
 
 Inspired by Project Hail Mary's Rocky — the alien research partner you
 couldn't have built the answer without.
 
+> **Looking for the Codex CLI version?** See
+> [`saml212/rockie-codex`](https://github.com/saml212/rockie-codex).
+> Same patterns (`[LEARN]`, taste corpus, autopilot, gauntlets) ported
+> to OpenAI Codex CLI's runtime.
+
 ---
 
-## What rockie does for you
+## What rockie-claude does for you
 
 Four jobs, run continuously, until you tell it to stop:
 
@@ -67,6 +72,43 @@ adversarial review built in:
 
 ---
 
+## What you and your agent will go through
+
+A chronological walkthrough of the first week. Each phase below is
+what actually happens; the rest of this README explains the machinery.
+
+**Hour 0 — Install + onboard.** Run `./install.sh ~/your-research-project`.
+Open Claude Code in that project; the SessionStart hook spots that no
+taste corpus exists and prompts `/onboard`. Five to seven questions,
+~5 minutes, voice optional. Output: a six-file taste corpus committed
+to `<project>/.rockie/taste/` (SOUL, STYLE, METHODOLOGY, DISMISSALS,
+MEMORY, INDEX). `INDEX.md` is auto-injected into every future session.
+
+**Day 1 — Plan + first experiment.** You talk to Claude. Subagents
+verify novelty and check for re-proposing dead ends already logged in
+the registry. Before any GPU dollars are spent, the pre-launch audit
+agent reads shapes, gradients, and stability of the proposed code in a
+separate context. Only then does the first training run launch. Every
+prediction (`predicted_delta`) is recorded alongside the hypothesis.
+
+**Day 1+ — Continuous loop.** `/autopilot` takes over. The Zero-Cost
+Monitor polls training logs without LLM calls, so a stable run costs
+nothing while it churns. ntfy push notifications wake you only on
+anomalies, ceiling crosses, or genuine decisions — never on routine
+heartbeats. Every run produces a `[LEARN]` block on completion; the
+next prompt's UserPromptSubmit hook auto-injects the top-5 relevant
+rules via FTS5 BM25 search.
+
+**Week 1+ — Iteration compounds.** Predicted-vs-actual deltas roll up
+per experiment so calibration becomes visible. Failures are classified
+`bug | bad-hyperparam | bad-hypothesis` and route `[LEARN]` or
+`[DEAD-END]` accordingly. The dead-end registry prevents new subagents
+from re-proposing what the team already ruled out. When your standards
+shift, refresh the relevant slice with `/onboard --section <name>` —
+identity drift gets an audit trail, not a silent overwrite.
+
+---
+
 ## The loop
 
 ```
@@ -94,8 +136,8 @@ Every cycle should make the next cycle better.
 ## Install
 
 ```bash
-git clone https://github.com/saml212/rockie.git ~/rockie
-cd ~/rockie
+git clone https://github.com/saml212/rockie-claude.git ~/rockie-claude
+cd ~/rockie-claude
 ./install.sh ~/path/to/your/research-project
 ```
 
@@ -177,8 +219,8 @@ reimplemented.
   get rejected. See [docs/_meta/PHILOSOPHY.md](docs/_meta/PHILOSOPHY.md).
 - Run `/clean` before committing — the pre-commit-gate hook enforces it.
 
-**Upstream-back from agents.** If an agent using rockie in your own
-project discovers a harness-level improvement, it can emit
+**Upstream-back from agents.** If an agent using rockie-claude in your
+own project discovers a harness-level improvement, it can emit
 `[LEARN harness-upstream] …` mid-session. Run
 `/propose-harness-change` later to package it as a reviewed,
 verified PR. The agent never auto-pushes.
@@ -199,10 +241,10 @@ verified PR. The agent never auto-pushes.
 - [SECURITY.md](SECURITY.md) — threat model + risk surfaces
 - [CHANGELOG.md](CHANGELOG.md) — what changed, by release
 
-**For agents and contributors working on rockie itself:**
+**For agents and contributors working on rockie-claude itself:**
 
 - [docs/_meta/README.md](docs/_meta/README.md) — meta-doc index (start here)
-- [docs/_meta/PHILOSOPHY.md](docs/_meta/PHILOSOPHY.md) — what rockie is and is not
+- [docs/_meta/PHILOSOPHY.md](docs/_meta/PHILOSOPHY.md) — what rockie-claude is and is not
 - [docs/_meta/USER_JOURNEYS.md](docs/_meta/USER_JOURNEYS.md) — researcher + agent flows
 - [docs/_meta/FEATURES.md](docs/_meta/FEATURES.md) — built / partial / planned
 - [docs/_meta/ROADMAP.md](docs/_meta/ROADMAP.md) — outstanding work, prioritized
@@ -210,3 +252,17 @@ verified PR. The agent never auto-pushes.
 - [docs/_meta/LESSONS.md](docs/_meta/LESSONS.md) — durable user feedback + audit findings
 - [docs/_meta/ONBOARDING_DESIGN.md](docs/_meta/ONBOARDING_DESIGN.md) — `/onboard` design spec
 - [docs/_meta/PLAN.md](docs/_meta/PLAN.md) — current snapshot of in-flight work
+
+---
+
+## Related projects
+
+- [`saml212/rockie-codex`](https://github.com/saml212/rockie-codex) —
+  OpenAI Codex CLI sibling. Same patterns, different runtime.
+
+## Acknowledgements
+
+This harness was extracted from research originally driven on a
+learned-representations workspace; see
+[pebbleml.com](https://www.pebbleml.com) for the kind of project a
+researcher might run rockie-claude on.
