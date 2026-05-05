@@ -142,7 +142,7 @@ class DataCrunchProvider:
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "rockie-datacrunch/0.1 (+https://github.com/saml212/rockie)",
+                "User-Agent": "rockie-datacrunch/0.1 (+https://github.com/saml212/rockie-claude)",
             },
             method=method,
         )
