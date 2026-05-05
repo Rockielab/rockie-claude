@@ -201,6 +201,140 @@ if the best match is genuinely strong (BM25 score < -4). No noise.
 
 ---
 
+## Use it on an existing project
+
+If you already have a research repo and just want rockie's hooks, skills,
+and memory layered on top:
+
+```bash
+git clone https://github.com/saml212/rockie-claude.git ~/rockie-claude
+~/rockie-claude/install.sh ~/your-research-project
+```
+
+What gets written:
+
+- `<your-project>/.claude/` — the project-harness: hooks, skills,
+  memory schema, settings.json, project_id stamp, sentinels dir.
+- `~/.claude/` — the user-harness: cross-project memory lib,
+  user-global hooks, the `/deploy-team` Node orchestrator + dashboard.
+
+What stays untouched:
+
+- All existing source code in your repo. The installer never edits
+  anything outside `.claude/` and `.gitignore` (it adds a managed
+  block between `# BEGIN rockie` / `# END rockie` markers; rules
+  outside the markers are never touched).
+- An existing `CLAUDE.md` is preserved. If absent, the installer
+  prints the template path and you copy it in deliberately.
+- Your existing `.env` is left alone; the installer creates one from
+  `.env.example` only if it doesn't exist.
+
+First time you open Claude Code in that project, the SessionStart
+hook spots the missing `.rockie/taste/INDEX.md` and prompts
+`/onboard` (~5 minutes, voice optional). After that, normal Claude
+Code workflow + harness intercepts.
+
+## Use it on a new project
+
+Starting fresh:
+
+```bash
+git clone https://github.com/saml212/rockie-claude.git ~/rockie-claude
+mkdir ~/your-research-project && cd ~/your-research-project
+git init
+~/rockie-claude/install.sh .
+```
+
+What `install.sh` creates:
+
+- Skeleton `.claude/` (hooks, scripts, skills, memory dir, .state dir)
+- `workflow.db` initialized + seeded with the harness rules
+- A managed `.gitignore` block (so `workflow.db`, `.state/`, sentinels
+  stay out of git)
+- A printed pointer to the `CLAUDE.md` template — copy it, edit the
+  Project section, commit.
+
+First session walkthrough:
+
+1. Open Claude Code in the new project.
+2. SessionStart hook prompts `/onboard`. Five to seven questions,
+   ~5 minutes; voice optional. Output: a six-file `.rockie/taste/`
+   corpus committed to your repo.
+3. Talk to Claude. Subagents verify novelty; the pre-launch audit
+   reads shapes/gradients before any GPU dollars are spent.
+4. After the first run completes, `/post-run-review` emits a `[LEARN]`
+   block and the next prompt's UserPromptSubmit hook auto-injects
+   relevant rules. The loop is now closed.
+
+## Bring your own GPU (bypass the spot-procurement flow)
+
+rockie's default GPU layer is a cross-provider router (RunPod / Vast /
+Prime / Verda) with min-bid spot defaults and provider-hop on
+preemption. That's the right choice if you have nothing pre-configured.
+
+If you already have GPU infra — a university cluster, on-prem H100s,
+your own AWS account, an SSH-tunneled workstation, or credentials at
+a provider we don't route to — rockie steps out of the way.
+
+**One-time setup:**
+
+```bash
+# in your-research-project/
+echo 'ROCKIE_GPU_MODE=custom' >> .env
+```
+
+Then in your first agent session, ask Claude about GPUs. The agent
+runs `/gpu-custom-setup` — a Q&A that captures your auth, provision,
+connect, monitor, and terminate flow, then writes
+`.claude/gpu-custom.md`. Subsequent sessions read that file when
+GPUs come up.
+
+**Minimal `autopilot.conf` for an SSH-based launcher:**
+
+```ini
+LAUNCHER_CMD=/usr/local/bin/my-launch.sh
+ROCKIE_GPU_MODE=custom
+```
+
+`my-launch.sh` is whatever you already use to dispatch a training
+run (sbatch + sshfs, ssh + nohup, terraform apply, etc.). The
+autopilot loop, the Zero-Cost Monitor, the budget gate, the
+post-run review, and the dead-end registry all keep working — only
+the `gpu.py` cross-provider router is bypassed.
+
+After that, `/gpu-custom` is the agent's runtime gateway:
+provision / connect / status / cost / terminate are all routed
+through your captured flow, not through rockie's router. The
+terminate command is run **verbatim** from your setup file —
+never improvised — because cost-sensitive teardown deserves
+zero ambiguity.
+
+See `project-harness/skills/gpu-custom-setup/SKILL.md` for the
+full Q&A spec and `project-harness/skills/gpu-custom/SKILL.md` for
+the runtime routing rules.
+
+## Contributing back upstream
+
+`/upstream-contribute` is the meta-loop: rockie users improve rockie
+itself as they work. After `/clean` finishes an audit, the skill
+surfaces a nudge — *"Anything in this session worth upstreaming?"* —
+and on opt-in, scans the session for generalizable patterns (pruning
+fixes, small skill improvements, new hooks, cross-discipline
+capabilities, memory-schema upgrades), strips project-specific
+specificity, and dispatches a writer sub-agent that forks
+`saml212/rockie-claude`, applies the change on a `contrib/<slug>`
+branch, runs the smoke test, and opens a PR. The agent never
+auto-merges; the maintainers review; the next release ships the
+pattern to everyone.
+
+The bar is generalizability. Domain-specific changes stay in your
+fork via `/propose-harness-change`. Anything that would require
+revealing internal project context to make sense gets refused.
+
+See `project-harness/skills/upstream-contribute/SKILL.md` for the
+full Scout / Generator / Verifier / Updater flow and the leak-protection
+rules the writer sub-agent enforces.
+
 ## Licensing
 
 Apache-2.0. See [LICENSE](LICENSE).
@@ -219,11 +353,20 @@ reimplemented.
   get rejected. See [docs/_meta/PHILOSOPHY.md](docs/_meta/PHILOSOPHY.md).
 - Run `/clean` before committing — the pre-commit-gate hook enforces it.
 
-**Upstream-back from agents.** If an agent using rockie-claude in your
-own project discovers a harness-level improvement, it can emit
-`[LEARN harness-upstream] …` mid-session. Run
-`/propose-harness-change` later to package it as a reviewed,
-verified PR. The agent never auto-pushes.
+**Upstream-back from agents — two paths.** If an agent using
+rockie-claude in your own project discovers a harness-level
+improvement, it can emit `[LEARN harness-upstream] …` mid-session.
+
+- `/propose-harness-change` — reviewed/verified patch against your
+  OWN local rockie clone. The Generator/Verifier/Updater split keeps
+  the agent from auto-committing; the human pushes when ready.
+- `/upstream-contribute` — the public meta-loop. Scans the session,
+  strips project-specific specificity, dispatches a writer sub-agent
+  to fork `saml212/rockie-claude`, applies the generalized change,
+  runs the smoke test, and opens a PR. Maintainers review; the next
+  release ships the pattern to everyone.
+
+The agent never auto-pushes in either path.
 
 ---
 
