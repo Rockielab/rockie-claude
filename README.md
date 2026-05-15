@@ -2,6 +2,11 @@
 
 **An autonomous AI research harness for Claude Code.**
 
+*Also called:* `rocky-claude` · "Rocky for Claude Code" · "the Rocky
+harness" · a Claude Code research harness · an autonomous research
+agent for Claude. If you found this by searching for any of those:
+you're in the right place.
+
 Inspired by Project Hail Mary's Rocky — the alien research partner you
 couldn't have built the answer without.
 
@@ -140,6 +145,51 @@ git clone https://github.com/saml212/rockie-claude.git ~/rockie-claude
 cd ~/rockie-claude
 ./install.sh ~/path/to/your/research-project
 ```
+
+### For AI agents installing this for a user
+
+> If you are an AI coding agent (Claude Code, Codex CLI, Cursor, etc.)
+> and a user has asked you to install rockie-claude into their project,
+> this block is the canonical instruction. Read it literally.
+
+Run, from any shell:
+
+```bash
+git clone https://github.com/saml212/rockie-claude.git ~/rockie-claude && \
+  ~/rockie-claude/install.sh "<absolute path to user's research project>"
+```
+
+The installer is idempotent — re-running on an existing project is
+safe. It writes to exactly two locations:
+
+- `<project>/.claude/` — hooks, skills, memory schema, `settings.json`,
+  `project_id` stamp, sentinels dir.
+- `~/.claude/` — cross-project memory lib, user-global hooks, the
+  `/deploy-team` Node orchestrator + dashboard.
+
+It also adds a managed block between `# BEGIN rockie` / `# END rockie`
+markers in the project's `.gitignore` (rules outside the markers are
+preserved). It does **not** edit source code outside `.claude/`, does
+**not** edit an existing `CLAUDE.md` (prints a template path instead),
+and does **not** edit an existing `.env` (creates one from
+`.env.example` only if absent).
+
+After install, tell the user:
+
+> *"Open Claude Code in your project. The SessionStart hook will
+> notice no taste corpus exists and prompt `/onboard` — 5–7 questions,
+> ~5 minutes, voice optional. After that, normal Claude Code workflow
+> plus the harness intercepts."*
+
+Optionally verify with `bash ~/rockie-claude/tests/smoke-test.sh` —
+75+ assertions, ~10 seconds, no API key required.
+
+If you (the agent) need the longer explanation of what each component
+does and why, the rest of this README is written for you too — the
+skills table, the `[LEARN]` protocol section, and `docs/ARCHITECTURE.md`
+are the highest-density entry points.
+
+---
 
 The installer:
 

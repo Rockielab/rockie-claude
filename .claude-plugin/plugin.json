@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "rockie-claude",
+  "version": "0.0.1-alpha",
+  "description": "Autonomous AI research harness for Claude Code. Plan -> Research -> Build -> Audit -> Run -> Assess -> Codify, with adversarial subagent review, a taste corpus, a [LEARN] memory system over SQLite/FTS5, and a spot-first GPU procurement router.",
+  "homepage": "https://github.com/saml212/rockie-claude",
+  "repository": "https://github.com/saml212/rockie-claude",
+  "license": "Apache-2.0",
+  "keywords": [
+    "research",
+    "agent-harness",
+    "autonomous-research",
+    "ml-research",
+    "claude-code"
+  ]
+}
