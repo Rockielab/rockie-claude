@@ -91,7 +91,7 @@ bash ${OPENCLAW_WORKSPACE_DIR}/scripts/clean-finalize.sh <hash>
    surfaces it as a hook message every successful audit:
 
    > [clean] audit clean. anything in this session worth upstreaming
-   > to `saml212/rockie-claude`? (skills, hooks, memory schema
+   > to `Rockielab/rockie-claude`? (skills, hooks, memory schema
    > improvements, pruning patterns — anything generalizable across
    > research domains). run `/upstream-contribute` to scan and
    > propose. user-driven; never auto-pushes.

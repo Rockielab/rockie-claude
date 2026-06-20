@@ -1,14 +1,42 @@
 ---
 name: upstream-contribute
-description: Scan the current session for harness-level patterns that would be useful to other rockie users — pruning fixes, small skill improvements, new hooks, cross-discipline-useful capabilities, memory-schema upgrades — strip the project-specific specificity, and dispatch a writer sub-agent that forks `saml212/rockie-claude`, applies the generalized change on a `contrib/<slug>` branch, runs `tests/smoke-test.sh`, and opens a PR. Never auto-merges; the maintainers review. Triggers when the user says "upstream this", "contribute back", "anything generalizable here", or after `/clean` emits its post-audit nudge. Sibling to `/propose-harness-change`, but scoped at the public upstream rather than a private fork.
+description: Scan the current session for harness-level patterns that would be useful to other rockie users, then either package a reviewed local harness patch or dispatch a public upstream contribution PR. Uses Scout/Generator/Verifier/Updater separation, never auto-merges, and requires human sign-off before pushing. Triggers when the user says "upstream this", "contribute back", "propose a harness change", "write a PR for rockie", or after `/clean` emits its post-audit nudge.
+scope: community
+attribution:
+  schema_version: 1
+  authors:
+    - rockie_username: "amara-singh"
+      display_name: "Amara Singh"
+      profile_refs: ["platform-skills:amara-singh"]
+  maintainers:
+    - rockie_username: "amara-singh"
+      display_name: "Amara Singh"
+      profile_refs: ["platform-skills:amara-singh"]
+  profiles:
+    platform-skills:amara-singh:
+      provider: "platform-skills"
+      url: "https://github.com/Rockielab/platform-skills/tree/main/skills/upstream-contribute"
+      verified: false
+  source:
+    repo: "Rockielab/platform-skills"
+    path: "skills/upstream-contribute/SKILL.md"
+    version: "2026-05-14"
+    url: "https://github.com/Rockielab/platform-skills/tree/main/skills/upstream-contribute"
+  contact_policy:
+    maintainer_contact: "profile_public_only"
+    contribution_channel: "product_proposals"
+  completeness: "complete"
 ---
 
 # /upstream-contribute — meta-loop: rockie users improve rockie
 
-`/propose-harness-change` packages improvements against the user's
-**own** local clone of rockie. `/upstream-contribute` is the public
-counterpart: it dispatches a PR against `saml212/rockie-claude` so
-the next release ships the pattern to everyone.
+`/upstream-contribute` covers two contribution modes:
+
+- **Local harness patch** — package an improvement against the user's
+  own local rockie clone as a reviewed patch proposal.
+- **Public upstream PR** — generalize the pattern and dispatch a PR
+  against `Rockielab/rockie-claude` so the next release ships it to
+  everyone.
 
 This is the meta-loop. Researchers using rockie-claude in their own
 work uncover patterns that generalize — a tighter `[DEAD-END]` query,
@@ -20,7 +48,8 @@ benefits.
 ## When to run
 
 - The user says "upstream this", "contribute back", "anything
-  generalizable here", "open-source this".
+  generalizable here", "open-source this", "propose a harness change",
+  or "write a PR for rockie".
 - `/clean` finishes an audit and emits the post-audit nudge (see
   `clean/SKILL.md` → "Post-audit hook").
 - A `[LEARN harness-upstream]` or `[LEARN cross-discipline]` block was
@@ -32,9 +61,8 @@ candidates before any forking happens.
 
 ## Method
 
-The skill mirrors the **Generator / Verifier / Updater** rigor of
-`/propose-harness-change` and adds a **Scout** step in front (since
-the upstream PR is a more public artifact than a local patch).
+The skill uses **Scout / Generator / Verifier / Updater** separation.
+The proposing agent never verifies and commits its own change.
 
 ### 1. Scout (this skill, in-session)
 
@@ -62,7 +90,7 @@ For each candidate, score (yes/no/no — keep only "yes"):
 | Question | Why it matters |
 |---|---|
 | Would this help another rockie user across a different research domain? | Cross-discipline generalizability is the bar for upstream. |
-| Is the pattern small and self-contained (one file, one function, one rule)? | Big architectural changes go through `propose-harness-change` first. |
+| Is the pattern small and self-contained (one file, one function, one rule)? | Big architectural changes need an explicit local patch proposal first. |
 | Can it be described without naming any internal project, person, or dataset? | Leak-protection. |
 | Does it survive without `(your-project)`-specific configuration? | If it doesn't, it's a fork patch, not an upstream patch. |
 
@@ -71,7 +99,7 @@ to the user with one sentence each:
 
 > Found 3 candidates. Take any of them upstream?
 > 1. `[LEARN]` row "fts5: strip hyphens from MATCH" → would generalize as a fix in `load-relevant-rules.sh`.
-> 2. New script `scripts/queue_audit.py` → would generalize as a small skill or as part of `/queue-refill`.
+> 2. New script `scripts/queue_audit.py` → would generalize as a small helper around the queue runtime.
 > 3. Tighter `[DEAD-END]` query in `load-relevant-deadends.sh` → would generalize as a hook fix.
 >
 > Reply with the numbers (e.g. "1, 3") to dispatch.
@@ -94,18 +122,51 @@ collaborator names get stripped. The agent does NOT proceed if it
 can't generalize the change — it returns the candidate to the user
 with "this looks too project-specific to upstream cleanly."
 
-### 3. Dispatch a writer sub-agent (Generator)
+### 3. Choose mode
+
+Ask the user which mode to run:
+
+- `local patch` for a private proposal against their own local rockie
+  clone.
+- `public upstream` for a fork/branch/PR against `Rockielab/rockie-claude`.
+
+Default to `local patch` when the candidate is risky, touches schema or
+hooks, or the user has not explicitly asked to publish.
+
+### 4A. Local patch mode — Generator / Verifier / Updater
+
+The Generator:
+
+- Writes the diff against a LOCAL CLONE of the rockie source repo.
+- Writes a short rationale: what pattern broke, why the fix composes
+  with existing differentiators, what smoke-test assertion proves it.
+- Never commits directly. Produces
+  `~/rockie-proposals/<YYYY-MM-DD-slug>/patch.diff`, `rationale.md`,
+  and `test.sh`.
+
+The Verifier is fresh-context and reads the patch, rationale, files
+touched, and `CONTRIBUTING.md`. It must answer:
+
+1. Does this compose with existing differentiators, or duplicate one?
+2. Does the smoke test actually test the claimed improvement?
+3. Is the change local, or does it ripple across schema?
+4. Is there path-traversal, SQL-injection, or shell-injection risk?
+
+The Updater is the human. They review the verifier report and diff,
+run the smoke test, then choose whether to apply, commit, or push.
+
+### 4B. Public upstream mode — writer sub-agent
 
 Use the `Agent` tool with NO prior session context. Pass:
 
 - The generalized change description (text)
 - The list of files to touch (paths only)
-- `target_repo=saml212/rockie-claude`
+- `target_repo=Rockielab/rockie-claude`
 - `branch=contrib/<short-slug>`
 
 The Generator must:
 
-1. `gh repo fork saml212/rockie-claude --clone --remote` (if not
+1. `gh repo fork Rockielab/rockie-claude --clone --remote` (if not
    already forked).
 2. `cd rockie-claude && git checkout -b contrib/<slug>`.
 3. Apply the change. Each file edit must compose with existing
@@ -119,23 +180,28 @@ The Generator must:
 6. Commit with Conventional Commit prefix (`feat:`, `fix:`, `docs:`,
    `chore:`, `port:`). Sign-off if upstream `CONTRIBUTING.md`
    requires it.
-7. `git push -u origin contrib/<slug>`.
-8. `gh pr create` with the body template below.
+7. Draft the PR body with the template below and report the branch,
+   commit SHA, smoke-test result, and exact push/PR commands.
+8. Stop. Do not push or open the PR unless the user explicitly confirms
+   public publishing in this invocation. After that confirmation only,
+   run `git push -u origin contrib/<slug>` and `gh pr create` with the
+   reviewed body.
 
-### 4. Verify (fresh-context audit, optional)
+### 5. Verify (fresh-context audit, optional)
 
 For changes touching hooks, schema, or anything that runs on every
-prompt — dispatch a fresh-context Verifier (same shape as
-`/propose-harness-change`) to read the diff and the four
-verifier-questions BEFORE the PR is opened. Store the verdict in
+prompt — dispatch a fresh-context Verifier to read the diff and the
+four verifier questions BEFORE the PR is opened. Store the verdict in
 the PR body. For docs-only or one-skill changes, skip this; the
 maintainers' PR review is enough.
 
-### 5. Updater (the human, asynchronous)
+### 6. Updater (the human, asynchronous)
 
-The PR sits open. The user reviews the body, runs the smoke test
-locally if they want extra confidence, and merges (or doesn't).
-The skill is done once the PR URL is reported back.
+The user reviews the body, runs the smoke test locally if they want
+extra confidence, and explicitly chooses whether to publish. If they
+approve publication, the PR sits open for maintainer review and merge.
+The skill is done once the draft publish commands or PR URL are
+reported back.
 
 ## PR body template
 
@@ -179,14 +245,14 @@ protection.
 
 ## What qualifies as upstream-worthy
 
-Same bar as `/propose-harness-change`, plus a stronger
-generalizability filter:
+Same safety bar as local patch mode, plus a stronger generalizability
+filter:
 
 **Yes:**
 - Bug fixes in hooks/scripts that affect any user (regardless of
   domain).
 - New smoke-test assertions catching general-purpose regressions.
-- New skill that's useful across disciplines (e.g. `/scheduled-notes`
+- New skill that's useful across disciplines (e.g. a portable continuity-note helper
   works for any research project; `/matrix-decomposition-helper`
   doesn't).
 - Memory-schema upgrades with migrations (`memory/migrations/NNN_*.sql`).
@@ -224,9 +290,9 @@ The skill must REFUSE to dispatch a Generator if:
 
 - **`/clean`** — emits the post-audit nudge that surfaces this skill.
   Runs after the audit sentinel is written; never blocks the commit.
-- **`/propose-harness-change`** — for changes scoped at the user's
-  OWN local rockie clone. If the user wants the change in their
-  fork first (and only later upstream), they run that skill instead.
+- **local patch mode** — for changes scoped at the user's own local
+  rockie clone. If the user wants the change in their fork first (and
+  only later upstream), use that mode instead of public upstream mode.
 - **`/post-run-review`** — populates `[LEARN]` rows that this skill
   will scan for candidates.
 - **autopilot** — autopilot writes `[LEARN]` blocks during long runs;
@@ -234,12 +300,10 @@ The skill must REFUSE to dispatch a Generator if:
 
 ## Open questions (roadmap)
 
-- The Generator's `gh pr create` step is the first place this skill
-  pushes to a public remote. Until we've seen 10+ real proposals and
-  reviewed the false-approve rate, the skill should pause for explicit
-  user "y" before the push step.
+- Public publishing is intentionally gated behind an explicit user
+  confirmation. After 10+ real proposals, revisit whether draft PR
+  creation can be safely automated while still preserving leak review.
 - The Verifier panel is single-agent today. A bias-probe panel (two
-  Verifiers with opposite priors + a meta-Verifier) is future work,
-  same as in `/propose-harness-change`.
+  Verifiers with opposite priors + a meta-Verifier) is future work.
 - A "draft PR" mode that opens the PR with `--draft` and lets the
   user re-edit the body before un-drafting is on the roadmap.
