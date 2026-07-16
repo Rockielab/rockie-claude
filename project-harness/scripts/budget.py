@@ -150,6 +150,16 @@ def _parse_minimal_toml(text: str) -> dict[str, Any]:
         value = value.strip()
         if not key:
             raise BudgetConfigError(f"{CFG} line {lineno}: missing key in {raw_line!r}")
+        # Bare keys only. A dotted key means a nested table in real TOML, and
+        # this parser would store it as the literal key "a.b" instead — so the
+        # same file would yield different ceilings under tomllib than here, and
+        # a ceiling stored under an unmatched key is an unenforced ceiling.
+        # Refuse rather than diverge.
+        if "." in key or key[0] in "\"'":
+            raise BudgetConfigError(
+                f"{CFG} line {lineno}: dotted or quoted keys are not supported; "
+                f"use a flat [section] with bare keys: {raw_line!r}"
+            )
         section[key] = _parse_scalar(value, lineno)
     return cfg
 

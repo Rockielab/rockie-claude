@@ -234,6 +234,17 @@ python3 "$NO_TOML_HARNESS" "$BP" check >/dev/null 2>&1
 NO_TOML_CHECK_EC=$?
 assert "budget.py check (no tomllib/tomli): still enforces ceiling via vendored parser" "2" "$NO_TOML_CHECK_EC"
 
+# A dotted key means a nested table in real TOML; the vendored parser would
+# store the literal key "a.b" instead, so the same file would yield different
+# ceilings under tomllib than here — and a ceiling under an unmatched key is an
+# unenforced ceiling. The parser must refuse rather than diverge silently.
+cp "$PROJ/.claude/budget.toml" "$WORK/budget.toml.bak"
+printf "[session]\ngpu.dollars = 5\n" > "$PROJ/.claude/budget.toml"
+python3 "$NO_TOML_HARNESS" "$BP" check >/dev/null 2>&1
+DOTTED_EC=$?
+cp "$WORK/budget.toml.bak" "$PROJ/.claude/budget.toml"
+assert "budget.py check (no tomllib/tomli): refuses dotted keys instead of misparsing" "2" "$DOTTED_EC"
+
 # Regression: budget-gate.sh itself must fail CLOSED (exit 2) if
 # budget.py crashes for ANY reason — not just a clean "ceiling crossed"
 # exit 2. This is the actual fail-open bug reproduced on this machine:
