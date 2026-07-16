@@ -11,6 +11,8 @@
 #   • Queue (add, atomic next, done, drop, refill-needed)
 #   • Budget controller (add, status, check, ceiling-cross, reset)
 #   • Budget-gate hook blocks on ceiling cross
+#   • Budget: vendored TOML fallback with no tomllib/tomli (no traceback,
+#     ceiling still enforced) + budget-gate fails CLOSED on any crash
 #   • ZCM supervisor: clean-exit / anomaly / crash
 #   • Stuck detector: 4 loop patterns fire, healthy stays silent
 #   • Stage CLI (set, get, list) + stage-inject hook
@@ -192,6 +194,65 @@ GATE_INPUT='{"session_id":"smoke-session","tool_input":{"command":"echo hi"}}'
 echo "$GATE_INPUT" | bash "$PROJ/.claude/hooks/budget-gate.sh" 2>/dev/null
 GATE_EC=$?
 assert "budget-gate hook exits 2 on ceiling cross" "2" "$GATE_EC"
+
+# Regression: budget.py must not crash — and must still enforce ceilings
+# via its vendored fallback parser — when neither stdlib tomllib
+# (py3.11+) nor the tomli backport is importable. This is the exact
+# condition on stock macOS system python3 (3.9, no tomli). We force it
+# with an import blocker so the test doesn't depend on the CI/dev
+# machine's ambient python3 version (which may already have tomli
+# installed, as it does on this machine).
+NO_TOML_HARNESS="$WORK/no_toml_harness.py"
+cat > "$NO_TOML_HARNESS" <<'PYEOF'
+import runpy, sys, importlib.abc
+
+class _BlockTomlImports(importlib.abc.MetaPathFinder):
+    def find_spec(self, name, path, target=None):
+        if name in ("tomllib", "tomli"):
+            raise ModuleNotFoundError(f"No module named {name!r} (blocked for test)")
+        return None
+
+sys.modules.pop("tomllib", None)
+sys.modules.pop("tomli", None)
+sys.meta_path.insert(0, _BlockTomlImports())
+
+script = sys.argv[1]
+sys.argv = sys.argv[1:]
+runpy.run_path(script, run_name="__main__")
+PYEOF
+
+# --help must never traceback, even with no TOML lib available at all.
+python3 "$NO_TOML_HARNESS" "$BP" --help >/dev/null 2>"$WORK/no_toml_help.err"
+HELP_EC=$?
+[ "$HELP_EC" -eq 0 ] && [ ! -s "$WORK/no_toml_help.err" ] \
+  && ok "budget.py --help: no traceback without tomllib/tomli" \
+  || fail "budget.py --help: no traceback without tomllib/tomli ($(cat "$WORK/no_toml_help.err" 2>/dev/null))"
+
+# `check` must still correctly enforce the (still-crossed) ceiling via
+# the vendored parser, not silently pass because parsing "failed".
+python3 "$NO_TOML_HARNESS" "$BP" check >/dev/null 2>&1
+NO_TOML_CHECK_EC=$?
+assert "budget.py check (no tomllib/tomli): still enforces ceiling via vendored parser" "2" "$NO_TOML_CHECK_EC"
+
+# Regression: budget-gate.sh itself must fail CLOSED (exit 2) if
+# budget.py crashes for ANY reason — not just a clean "ceiling crossed"
+# exit 2. This is the actual fail-open bug reproduced on this machine:
+# a ModuleNotFoundError crash exited 1, and the old hook only blocked on
+# exit==2, so it fell through to `exit 0` and let the tool call through
+# with a GPU-spend ceiling silently unenforced. Simulate the crash via a
+# fake `python3` ahead of the real one on PATH so this test is
+# independent of today's budget.py fix.
+FAKE_BIN="$WORK/fake-crash-bin"
+mkdir -p "$FAKE_BIN"
+cat > "$FAKE_BIN/python3" <<'SH'
+#!/usr/bin/env bash
+echo "Traceback (most recent call last): simulated ModuleNotFoundError" >&2
+exit 1
+SH
+chmod +x "$FAKE_BIN/python3"
+echo "$GATE_INPUT" | PATH="$FAKE_BIN:$PATH" bash "$PROJ/.claude/hooks/budget-gate.sh" 2>/dev/null
+CRASH_GATE_EC=$?
+assert "budget-gate hook fails CLOSED on budget.py crash (not just ceiling-cross)" "2" "$CRASH_GATE_EC"
 
 python3 "$BP" reset session >/dev/null
 ok "budget reset session"

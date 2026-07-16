@@ -36,16 +36,122 @@ import sqlite3
 import sys
 from typing import Any
 
+# TOML support, in preference order: stdlib tomllib (py3.11+), the tomli
+# backport (if pip-installed), and — because this script sits behind the
+# PreToolUse budget-gate hot path and must never hard-depend on pip or
+# network access — a small vendored parser for the flat [section] /
+# key=value shape that budget.toml actually uses (see
+# _parse_minimal_toml below).
+#
+# Regression note: this used to be a bare `import tomli as tomllib`
+# fallback with nothing underneath it. On a machine with only system
+# Python (<3.11, no tomli — e.g. macOS's /usr/bin/python3), every
+# invocation of this script crashed with ModuleNotFoundError *at import
+# time*, before argparse even ran — so even `budget.py --help` printed a
+# traceback. Worse: hooks/budget-gate.sh only blocked (exit 2) when this
+# script exited with exactly code 2 ("ceiling crossed"); a crash exits 1,
+# so the PreToolUse hook fell through to `exit 0` and silently allowed
+# the tool call — a configured GPU-spend ceiling would not be enforced.
+# Fixed on both ends: this script no longer crashes, and
+# hooks/budget-gate.sh now treats any non-zero exit as "block" (see the
+# comment there).
 try:
     import tomllib  # py311+
 except ModuleNotFoundError:  # pragma: no cover
-    import tomli as tomllib  # type: ignore
+    try:
+        import tomli as tomllib  # type: ignore
+    except ModuleNotFoundError:
+        tomllib = None  # fall back to _parse_minimal_toml() below
 
 HARNESS_ROOT = pathlib.Path(__file__).resolve().parent.parent
 DB = HARNESS_ROOT / "memory" / "workflow.db"
 CFG = HARNESS_ROOT / "budget.toml"
 
 VALID_METRICS = {"tokens", "wallclock_s", "tool_calls", "dollars"}
+
+
+class BudgetConfigError(RuntimeError):
+    """budget.toml exists but couldn't be parsed.
+
+    Callers MUST treat this as "ceilings unknown", not "no ceilings
+    configured" — the two look identical unless this is a distinct
+    exception. cmd_check turns it into a fail-closed exit 2 rather than
+    silently proceeding as if no budget.toml existed.
+    """
+
+
+def _parse_scalar(value: str, lineno: int) -> Any:
+    """Parse one TOML scalar: quoted string, bool, int, or float.
+
+    Ints/floats may use `_` as a digit separator (`5_000_000`), matching
+    TOML's own rule and budget.toml's documented format (see module
+    docstring).
+    """
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        return value[1:-1]
+    if value in ("true", "false"):
+        return value == "true"
+    digits = value.replace("_", "")
+    try:
+        return int(digits)
+    except ValueError:
+        pass
+    try:
+        return float(digits)
+    except ValueError:
+        pass
+    raise BudgetConfigError(f"{CFG} line {lineno}: cannot parse value {value!r}")
+
+
+def _parse_minimal_toml(text: str) -> dict[str, Any]:
+    """Vendored fallback TOML reader for when neither tomllib nor tomli
+    is importable (system Python < 3.11 with no pip access).
+
+    Deliberately narrow — this is NOT a general TOML parser. It only
+    understands the shape budget.toml is documented to use (see the
+    module docstring): top-level `[section]` headers followed by
+    `key = value` lines, `#` comments, blank lines, and scalar values
+    (quoted strings, bools, ints/floats with optional `_` separators).
+    No nested tables, arrays, inline tables, dotted keys, multiline
+    strings, or datetimes. Anything outside that subset raises
+    BudgetConfigError rather than silently misparsing — a budget file
+    we can't confidently read must never be treated as "no ceilings".
+    """
+    cfg: dict[str, Any] = {}
+    section: dict[str, Any] = {}
+    have_section = False
+    for lineno, raw_line in enumerate(text.splitlines(), start=1):
+        line = raw_line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("["):
+            if not line.endswith("]") or line.count("[") != 1:
+                raise BudgetConfigError(
+                    f"{CFG} line {lineno}: unsupported section header {raw_line!r}"
+                )
+            name = line[1:-1].strip()
+            if not name or "." in name:
+                raise BudgetConfigError(
+                    f"{CFG} line {lineno}: unsupported section name {raw_line!r}"
+                )
+            section = cfg.setdefault(name, {})
+            have_section = True
+            continue
+        if not have_section:
+            raise BudgetConfigError(
+                f"{CFG} line {lineno}: key=value before any [section]: {raw_line!r}"
+            )
+        if "=" not in line:
+            raise BudgetConfigError(
+                f"{CFG} line {lineno}: expected 'key = value', got {raw_line!r}"
+            )
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            raise BudgetConfigError(f"{CFG} line {lineno}: missing key in {raw_line!r}")
+        section[key] = _parse_scalar(value, lineno)
+    return cfg
 
 
 def project_name() -> str:
@@ -77,8 +183,13 @@ def connect() -> sqlite3.Connection:
 def read_cfg() -> dict[str, Any]:
     if not CFG.exists():
         return {"session": {}, "project": {}}
-    with CFG.open("rb") as f:
-        return tomllib.load(f)
+    text = CFG.read_text()
+    if tomllib is not None:
+        try:
+            return tomllib.loads(text)
+        except Exception as exc:  # tomllib/tomli both raise *.TOMLDecodeError
+            raise BudgetConfigError(f"{CFG}: {exc}") from exc
+    return _parse_minimal_toml(text)
 
 
 def _key(scope: str, metric: str) -> str:
@@ -124,7 +235,11 @@ def cmd_add(args) -> int:
 
 
 def cmd_status(_args) -> int:
-    cfg = read_cfg()
+    try:
+        cfg = read_cfg()
+    except BudgetConfigError as exc:
+        print(f"[budget] cannot parse budget.toml: {exc}", file=sys.stderr)
+        return 2
     conn = connect()
     hdr = f"{'scope':9} {'metric':12} {'used':>14} {'ceiling':>14} {'pct':>6}"
     print(hdr); print("─" * len(hdr))
@@ -156,7 +271,14 @@ def cmd_status(_args) -> int:
 
 
 def cmd_check(_args) -> int:
-    cfg = read_cfg()
+    try:
+        cfg = read_cfg()
+    except BudgetConfigError as exc:
+        # Fail CLOSED: a budget.toml we can't parse must block, exactly
+        # like a crossed ceiling — never fall through as if unconfigured.
+        print(f"[budget-check] cannot parse budget.toml: {exc}", file=sys.stderr)
+        print("  Refusing to proceed with unknown budget ceilings (fail-closed).", file=sys.stderr)
+        return 2
     conn = connect()
     violations: list[str] = []
     for scope in ("session", "project"):
