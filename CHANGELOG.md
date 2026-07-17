@@ -47,6 +47,20 @@ commit on `main` is considered alpha.
 - `install.sh` stamps a UUID into `.claude/project_id` on first
   install so two checkouts of the same repo don't collide (audit F12).
 - `SECURITY.md`, `CHANGELOG.md` (this file), issue + PR templates.
+- `autoresearch` skill gained a sustained-campaign layer: concurrent
+  run/plan/write-up pipeline staffing, a verdict protocol (blind runs,
+  fresh judge-tier assessor, record-verdict-before-dispatch, raw-
+  artifact tiebreaks on conflicting agent claims), subagent tiering,
+  a pre-launch resource/placement red-team with GPU-hour ceremony
+  tiers, and a novelty re-verification gate (triple sweep — by-task,
+  by-mechanism, internal-archive — re-run at every claim pivot, not
+  just at design time). `claude-md/ml-research.md` gained a matching
+  Operating Doctrine section. `examples/seed_example_ml_research.py`
+  gained `audit` / `coordination` / `ops` / `measurement` / `research`
+  / `security` seed lessons distilled from the same source (multi-
+  round audits, coordinator-claim verification, tmux-supervisor
+  patterns for unattended remote runs, and prompt-injection defense
+  against fake system-reminder blocks in tool output).
 
 ## [0.0.1] — initial public scaffold (2026-04-23)
 
