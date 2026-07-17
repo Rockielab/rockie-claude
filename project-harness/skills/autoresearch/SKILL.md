@@ -243,7 +243,7 @@ there an undischarged gate blocking this launch?
 | > 50 GPU-hours, or anything publication-bound | full multi-round adversarial gauntlet |
 
 **Utilization, not occupancy.** If you're paying for a GPU — spot-rented
-or a fixed uptime-metered box — idle time is wasted money either way.
+or a reserved box on a fixed compute window — idle time is wasted money either way.
 Sample utilization periodically; sustained low utilization on a GPU
 you're actively paying for is a bug to diagnose, not background noise
 (fix with exact tmux-session names or exact PIDs — see the `ops`
