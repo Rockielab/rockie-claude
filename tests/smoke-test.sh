@@ -1121,17 +1121,26 @@ else
 fi
 
 # The filter script refuses a manifest that tries to exclude a
-# bootstrap-paradox skill, even if someone hand-edits skills-manifest.json.
+# bootstrap-paradox skill, or a name with no matching skill directory, even
+# if someone hand-edits skills-manifest.json — and it must exit exactly 2
+# (a distinguishable guard-failure status), not just "nonzero." Assert the
+# real exit code for both guard paths rather than a truthy if/else, which
+# would also pass on an unrelated crash (import error, bad JSON, etc.).
 GUARD_TMP=$(mktemp -d -t smoke-guard-XXXXXX)
 mkdir -p "$GUARD_TMP/install-assets" "$GUARD_TMP/project-harness/skills/find-skills"
+
 cat > "$GUARD_TMP/install-assets/skills-manifest.json" <<'JSON'
 {"never_exclude": ["find-skills", "onboard"], "excluded_from_overlay": {"find-skills": "should never happen"}}
 JSON
-if python3 "$ROCKIE/install-assets/skill_overlay_filter.py" "$GUARD_TMP/project-harness" >/dev/null 2>&1; then
-  fail "skill_overlay_filter.py must refuse to exclude find-skills (bootstrap paradox)"
-else
-  ok "skill_overlay_filter.py refuses to exclude a never_exclude skill"
-fi
+python3 "$ROCKIE/install-assets/skill_overlay_filter.py" "$GUARD_TMP/project-harness" >/dev/null 2>&1
+assert "skill_overlay_filter.py exits 2 on a bootstrap-paradox violation" "2" "$?"
+
+cat > "$GUARD_TMP/install-assets/skills-manifest.json" <<'JSON'
+{"never_exclude": ["find-skills", "onboard"], "excluded_from_overlay": {"totally-fake-skill": "typo or stale entry"}}
+JSON
+python3 "$ROCKIE/install-assets/skill_overlay_filter.py" "$GUARD_TMP/project-harness" >/dev/null 2>&1
+assert "skill_overlay_filter.py exits 2 on a nonexistent-skill-dir violation" "2" "$?"
+
 rm -rf "$GUARD_TMP"
 
 # ── Summary ──────────────────────────────────────────────────────────────

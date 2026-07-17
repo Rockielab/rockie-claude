@@ -31,18 +31,29 @@ def load_excluded(manifest_path: pathlib.Path, skills_dir: pathlib.Path) -> list
 
     violations = never_exclude & excluded.keys()
     if violations:
-        raise SystemExit(
+        # NOTE: `raise SystemExit(<str>)` exits 1, not 2 — Python treats a
+        # non-int SystemExit argument as a message to print to stderr, with
+        # the process exit code fixed at 1 regardless of the string's
+        # content. Print explicitly, then exit with the actual intended
+        # code so callers checking for a distinguishable guard-failure
+        # status (install.sh, tests/smoke-test.sh) get exit 2 as documented
+        # above, not exit 1.
+        print(
             "skills-manifest.json excludes bootstrap-paradox skill(s): "
             f"{sorted(violations)} — find-skills/onboard can never be "
-            "excluded from the harness overlay (see never_exclude)."
+            "excluded from the harness overlay (see never_exclude).",
+            file=sys.stderr,
         )
+        raise SystemExit(2)
 
     missing = [name for name in excluded if not (skills_dir / name).is_dir()]
     if missing:
-        raise SystemExit(
+        print(
             "skills-manifest.json excludes non-existent skill dir(s): "
-            f"{sorted(missing)} under {skills_dir}"
+            f"{sorted(missing)} under {skills_dir}",
+            file=sys.stderr,
         )
+        raise SystemExit(2)
 
     return sorted(excluded)
 
