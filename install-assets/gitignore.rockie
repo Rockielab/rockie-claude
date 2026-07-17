@@ -4,6 +4,11 @@
 # preserved.
 
 # BEGIN rockie
+# Stray git-internals backups — never commit raw git internals
+# (e.g. `cp -r .git .git.backup-x` during a repo split/migration).
+.git.backup*/
+.git.bak*/
+
 # Harness runtime — per-project state, never commit
 .claude/memory/workflow.db
 .claude/memory/workflow.db-*

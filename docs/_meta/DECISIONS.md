@@ -7,18 +7,22 @@ DEC-NN."
 
 ---
 
-## DEC-01: Name = idastone
+## DEC-01: Initial project codename
 
 **Date:** 2026-04-23
 **Considered alternatives:** rigor, falsify, eureka, lodestone,
 crucible, assay, cairn, atelier, autolab, codify
-**Choice:** idastone
+**Choice:** An internal working codename (pre-`rockie`), picked over
+the alternatives above.
 **Reasoning:** User wanted something Pebble-adjacent (rock-themed)
 that suggested intelligence/autonomy/discovery without requiring
 explanation. "rigor" was rationally correct but emotionally cold;
 "eureka" was charming but cliché; "lodestone" required interpretation.
-"idastone" is original, distinctive, and pronounceable.
-**Constraints:** GitHub: saml212/idastone (private as of launch).
+The chosen codename was original, distinctive, and pronounceable.
+**Redacted 2026-07-16 (issue #23):** the literal codename and its
+GitHub org path were stripped from this entry — they'd leaked into
+the public repo via a committed `.git` backup directory. The naming
+decision that matters going forward is DEC-20.
 **Superseded by:** DEC-20 (renamed to rockie 2026-04-28).
 
 ## DEC-02: Apache-2.0 license
@@ -156,8 +160,9 @@ recovery.
 **Choice:** Keep `bug | bad-hyperparam | bad-hypothesis` as the
 primary enum routing `[LEARN]` and `[DEAD-END]`. Add
 arXiv 2603.06847's 13-category as a second column.
-**Supersedes:** Earlier framing in PORTS.md / STARS.md that
-called this an "ecosystem gap" — three 2026 papers closed it.
+**Supersedes:** Earlier framing in PORTS.md and internal roadmap
+notes that called this an "ecosystem gap" — three 2026 papers
+closed it.
 **Reasoning:** Three-value coarse classification is sufficient
 to route between [LEARN] and [DEAD-END] capture. The 13-category
 gives richer post-run analysis for human readers without changing
@@ -209,15 +214,16 @@ gated enforcement prevents the same mistake from recurring. See
 user-confidential roadmap / positioning / unreleased material.
 **Reasoning:** Future agents working on rockie need
 PHILOSOPHY.md / DECISIONS.md / etc. to be in the OSS repo.
-Per-user roadmap docs (e.g. STARS.md) shouldn't be in the OSS
-repo. Two folders, two visibilities.
+Per-user roadmap docs (competitive positioning, star-growth
+strategy, unreleased plans) shouldn't be in the OSS repo. Two
+folders, two visibilities.
 
-## DEC-20: Renamed idastone → rockie
+## DEC-20: Renamed from original codename → rockie
 
 **Date:** 2026-04-28
 **Choice:** Rename project to `rockie` with tagline "the AI research harness that rocks."
-**Reasoning:** "idastone" lacked the warmth and Pebble-adjacency the user wanted.
-"rockie" references Project Hail Mary's Rocky — the alien research partner —
+**Reasoning:** The original codename (DEC-01) lacked the warmth and Pebble-adjacency
+the user wanted. "rockie" references Project Hail Mary's Rocky — the alien research partner —
 capturing the harness's role as a research collaborator. Spelling with `ie`
 avoids the Rocky Linux name collision on GitHub.
 **Supersedes:** DEC-01.
@@ -240,5 +246,5 @@ resource-efficient indefinite autonomy, adversarial-network
 bulletproofing) are easier to pitch under the assistant framing.
 **Refines:** DEC-20.
 **README, PHILOSOPHY.md, install.sh banner** updated. Project name
-stays `rockie`; `IDASTONE_*` → `ROCKIE_*` env-var rename done in
-DEC-20 still stands.
+stays `rockie`; the old codename's env-var prefix → `ROCKIE_*` rename
+done in DEC-20 still stands.

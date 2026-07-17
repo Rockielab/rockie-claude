@@ -82,8 +82,11 @@ agent has bandwidth.
 - Stale `docs/_internal/` content if any
 - The two EXITED RunPod pods (user's call to terminate)
 - This PLAN.md itself — should get rewritten as items move forward
-- Possibly delete `docs/STARS.md` reference from the original
-  scaffold commits (it was moved to `docs/_internal/stars.md` later)
+- [Done via #23, 2026-07-16] Old scaffold-commit reference to the
+  internal roadmap doc — resolved by removing the leaked
+  `.git.backup-pre-split/` directory (which carried a copy of that
+  doc) from the public repo. The live version stays in the
+  gitignored `docs/_internal/` tier per DEC-19.
 
 ## Invariants to preserve
 

@@ -2,6 +2,16 @@
 # This file protects the rockie repo itself from accidental leakage by
 # contributors. For the file that gets merged into a USER's project on
 # install, see install-assets/gitignore.rockie.
+#
+# NOTE: install.sh refuses to install rockie into its own clone (see the
+# ROCKIE_PHYS guard), so it never rewrites this file. There is no BEGIN/END
+# managed block here — everything below is hand-maintained.
+
+# Stray git-internals backups (e.g. `cp -r .git .git.backup-x` during a
+# repo split/migration) — never commit raw git internals. See issue #23:
+# .git.backup-pre-split/ leaked docs/STARS.md + the pre-rename codename.
+.git.backup*/
+.git.bak*/
 
 # Python
 __pycache__/
