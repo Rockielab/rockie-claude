@@ -40,7 +40,9 @@ Last big sweep: 2026-04-27.
 - `stuck-detector.sh` (UserPromptSubmit) — 4 loop types, periods 2/3/4
 - `stage-inject.sh` (UserPromptSubmit) — `## Stage:` section emission
 - `budget-reconcile.sh` (UserPromptSubmit) — 120s TTL, calls gpu.py reconcile
-- `session-report.sh` (SessionStart) — emits JSON envelope additionalContext
+- `session-report.sh` (SessionStart) — emits JSON envelope additionalContext,
+  incl. an installed-skills inventory that re-fires on every source
+  (startup/resume/clear/compact) so skills survive context compaction
 - `doc-guard.sh` (PreToolUse Write|Edit) — short-circuits before log rotate on non-md
 - `pre-commit-gate.sh` (PreToolUse Bash) — clean-hash sentinel, `pwd -P` scope, runs in PROBE_CWD
 - `pre-train-gate.sh` (PreToolUse Bash) — broadened regex (python3.11), # --smoke comment stripping, scope inversion fix
