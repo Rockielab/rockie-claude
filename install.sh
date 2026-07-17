@@ -479,5 +479,25 @@ if [ "$PROJECT_ONLY" = "0" ] && [ ! -d "$HOME/.claude/teams/orchestrator/node_mo
   echo "  cd $HOME/.claude/teams/orchestrator && npm install"
 fi
 
+# ── Skill catalog on-ramp ────────────────────────────────────────────────
+# The catalog is the harness's central idea: ~300 skills stay OUT of the
+# agent's context and get pulled on demand. Say so here, at the one moment
+# we know an agent (or human) is looking at this terminal. Both branches
+# are non-blocking and fire once per install, matching the nudges above.
+echo ""
+if command -v rockie >/dev/null 2>&1; then
+  echo "skill catalog: the rockie CLI is installed — your agent can pull from"
+  echo "  ~300 platform skills on demand (they stay out of context until needed):"
+  echo "    rockie skill catalog --search grpo --json"
+  echo "    rockie skill pull grpo-rl-training --out .claude/skills/grpo-rl-training"
+  echo "  Pulled skills are invocable immediately. See /find-skills for the full flow."
+else
+  echo "optional: the rockie CLI lets your agent pull from ~300 platform skills"
+  echo "  (ML training/inference, biology, chemistry, physics, databases, coding)"
+  echo "  on demand instead of keeping them all in context:"
+  echo "    curl -fsSL https://rockielab.com/install.sh | sh && rockie auth login"
+  echo "  Everything above works without it. See /find-skills for the full flow."
+fi
+
 echo ""
 echo "✓ rockie install complete."
