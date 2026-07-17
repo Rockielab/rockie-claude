@@ -33,7 +33,7 @@ SQLITE=/usr/bin/sqlite3
 ROCKIE="$(cd "$(dirname "$0")/.." && pwd)"
 WORK=$(mktemp -d -t rockie-smoke-XXXXXX)
 # Clean up any per-test tempdirs that escape the main WORK; set a broad trap.
-trap 'rm -rf "$WORK"; rm -rf /tmp/rockie-autopilot-* /tmp/rockie-migration-* /tmp/smoke-merge-* /tmp/smoke-idem-* /tmp/smoke-catalog-* 2>/dev/null' EXIT
+trap 'rm -rf "$WORK"; rm -rf /tmp/rockie-autopilot-* /tmp/rockie-migration-* /tmp/smoke-merge-* /tmp/smoke-idem-* /tmp/smoke-catalog-* /tmp/rockie-worktree-* 2>/dev/null' EXIT
 
 PASS=0
 FAIL=0
@@ -532,6 +532,44 @@ echo "$BOOTSTRAP_OUT" | grep -q '\[CLAUDE\.md\]' && fail "clean audit.py: bootst
 echo "$BOOTSTRAP_OUT" | grep -q '\[RANDOM_DOC\.md\].*NEW \.md file' && ok "clean audit.py: anti-slop new-.md rule still blocks an arbitrary new doc" || fail "clean audit.py: new-.md rule regressed for non-CLAUDE.md files"
 (cd "$PROJ" && git reset -q CLAUDE.md RANDOM_DOC.md)
 rm -f "$PROJ/CLAUDE.md" "$PROJ/RANDOM_DOC.md" "$PROJ"/.claude/.state/clean-ok-*
+
+# Bug 1, worktree manifestation: `.claude/.state/` is gitignored, so
+# `git worktree add` does NOT copy it — each worktree starts with its own
+# empty `.state/`. audit.py must self-locate to THAT worktree's own
+# `.claude`, not a sibling checkout's, even if OPENCLAW_WORKSPACE_DIR is
+# left set (stale) from a previous session. Otherwise /clean reports
+# clean while pre-commit-gate.sh — which self-locates independently from
+# its own `$0` inside the worktree — still blocks on a sentinel that
+# landed in the wrong tree.
+WTBASE=$(mktemp -d -t rockie-worktree-XXXXXX)
+mkdir -p "$WTBASE/main/.claude"
+(cd "$WTBASE/main" && git init -q)
+rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/" "$WTBASE/main/.claude/" >/dev/null
+chmod +x "$WTBASE/main/.claude/hooks/"*.sh "$WTBASE/main/.claude/scripts/"*.sh 2>/dev/null
+(cd "$WTBASE/main" && git add -A >/dev/null && git commit -q -m init >/dev/null)
+(cd "$WTBASE/main" && git worktree add -q -b wt-feature "$WTBASE/wt" >/dev/null 2>&1)
+
+echo "wt change" > "$WTBASE/wt/wtfile.txt"
+(cd "$WTBASE/wt" && git add wtfile.txt)
+(cd "$WTBASE/wt" && env -u OPENCLAW_WORKSPACE_DIR -u OPENCLAW_SKILLS_DIR python3 .claude/skills/clean/audit.py --scope staged >/dev/null 2>&1)
+assert "clean audit.py: passes inside a git-worktree checkout" "0" "$?"
+
+WT_HASH=$(cd "$WTBASE/wt" && bash .claude/scripts/compute_clean_hash.sh)
+[ -f "$WTBASE/wt/.claude/.state/clean-ok-$WT_HASH" ] && ok "clean audit.py: sentinel lands in the worktree's own .state" || fail "clean audit.py: sentinel missing from the worktree's .state"
+
+IN=$(python3 -c "import json;print(json.dumps({'tool_input':{'command':'git commit -m x','cwd':'$WTBASE/wt'}}))")
+echo "$IN" | bash "$WTBASE/wt/.claude/hooks/pre-commit-gate.sh" >/dev/null 2>&1
+assert "pre-commit-gate: worktree commit unblocked by the worktree's own sentinel" "0" "$?"
+
+# A stale OPENCLAW_WORKSPACE_DIR pointed at the main checkout must not
+# redirect the sentinel there instead of the worktree.
+echo "wt change 2" >> "$WTBASE/wt/wtfile.txt"
+(cd "$WTBASE/wt" && git add wtfile.txt)
+(cd "$WTBASE/wt" && OPENCLAW_WORKSPACE_DIR="$WTBASE/main/.claude" python3 .claude/skills/clean/audit.py --scope staged >/dev/null 2>&1)
+WT_HASH2=$(cd "$WTBASE/wt" && bash .claude/scripts/compute_clean_hash.sh)
+[ -f "$WTBASE/wt/.claude/.state/clean-ok-$WT_HASH2" ] && ok "clean audit.py: ignores a stale OPENCLAW_WORKSPACE_DIR pointed at a sibling checkout" || fail "clean audit.py: stale OPENCLAW_WORKSPACE_DIR redirected the sentinel away from the worktree"
+[ ! -f "$WTBASE/main/.claude/.state/clean-ok-$WT_HASH2" ] && ok "clean audit.py: did not leak the sentinel into the main checkout's .state" || fail "clean audit.py: sentinel incorrectly written into main checkout"
+rm -rf "$WTBASE"
 
 # ── 15. FTS5 hyphen-safety note ──────────────────────────────────────────
 section "installer settings merge"

@@ -40,19 +40,27 @@ def resolve_workspace_dir():
 
     Every other hook/script in this harness self-locates
     (`ROOT="$(cd "$(dirname "$0")/.." && pwd)"` in the bash hooks/scripts)
-    instead of relying on an environment variable. audit.py was the one
-    holdout that *required* OPENCLAW_WORKSPACE_DIR — but nothing in this
-    repo (or an installed project) ever sets that var, so a plain shell
-    made /clean impossible to unblock even by following
-    pre-commit-gate.sh's own remediation command verbatim (issue #24).
+    from its own file path — never from an environment variable.
+    audit.py was the one holdout that *required* OPENCLAW_WORKSPACE_DIR:
+    nothing in this repo (or an installed project) ever sets it, so a
+    plain shell made /clean impossible to unblock even by following
+    pre-commit-gate.sh's own remediation command verbatim (issue #24
+    bug 1).
 
-    Mirror the bash convention: self-locate from `__file__` first, but
-    still honor an explicit OPENCLAW_WORKSPACE_DIR for any environment
-    that does export one.
+    An env-var override is actively worse than no override: a stale
+    value (e.g. left set in the shell from a previous session, or
+    pointed at a sibling checkout) silently redirects the sentinel to
+    the WRONG `.claude/.state`. This bites hardest in a `git worktree
+    add` checkout — each worktree has its own `.claude/.state` (it's
+    gitignored, so `git worktree add` doesn't copy it) — so a leftover
+    OPENCLAW_WORKSPACE_DIR pointed at the main checkout writes the
+    sentinel there while pre-commit-gate.sh, self-locating from its own
+    `$0` inside the worktree, checks the worktree's `.state` and finds
+    nothing: /clean reports clean, the commit still blocks (issue #24
+    bug 1, worktree manifestation). So this never consults the
+    environment at all — it always self-locates, matching every bash
+    script in the harness exactly.
     """
-    ws = os.environ.get("OPENCLAW_WORKSPACE_DIR")
-    if ws:
-        return ws
     # audit.py lives at <workspace>/skills/clean/audit.py
     return str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
