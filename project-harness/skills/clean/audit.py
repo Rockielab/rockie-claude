@@ -9,10 +9,11 @@ Three tracks, changed-files-only:
   - AI slop prompt: returned in the report for the agent to action
 
 On zero-blocker pass, hands off to
-${OPENCLAW_WORKSPACE_DIR}/scripts/clean-finalize.sh, which writes the
-sentinel ${OPENCLAW_WORKSPACE_DIR}/.state/clean-ok-<hash> AND emits the
-upstream-contribute nudge to stderr. The pre-commit-gate hook reads
-this sentinel.
+<workspace>/scripts/clean-finalize.sh, which writes the sentinel
+<workspace>/.state/clean-ok-<hash> AND emits the upstream-contribute
+nudge to stderr. The pre-commit-gate hook reads this sentinel.
+<workspace> is self-located from this file's path (see
+resolve_workspace_dir()); no environment variable is required.
 
 Exit codes:
   0  zero blockers (sentinel written)
@@ -32,6 +33,28 @@ import sys
 
 def run(cmd, **kw):
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
+
+
+def resolve_workspace_dir():
+    """Resolve the `.claude` workspace root that owns this script.
+
+    Every other hook/script in this harness self-locates
+    (`ROOT="$(cd "$(dirname "$0")/.." && pwd)"` in the bash hooks/scripts)
+    instead of relying on an environment variable. audit.py was the one
+    holdout that *required* OPENCLAW_WORKSPACE_DIR — but nothing in this
+    repo (or an installed project) ever sets that var, so a plain shell
+    made /clean impossible to unblock even by following
+    pre-commit-gate.sh's own remediation command verbatim (issue #24).
+
+    Mirror the bash convention: self-locate from `__file__` first, but
+    still honor an explicit OPENCLAW_WORKSPACE_DIR for any environment
+    that does export one.
+    """
+    ws = os.environ.get("OPENCLAW_WORKSPACE_DIR")
+    if ws:
+        return ws
+    # audit.py lives at <workspace>/skills/clean/audit.py
+    return str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
 
 def changed_files(scope, since=None):
@@ -98,8 +121,17 @@ def audit_markdown(f, is_new, repo_root):
     issues = []
     # Block creation of new .md files — user's rule for this repo.
     # Exempt: harness infrastructure (.claude/** legacy or .openclaw/**)
-    # where .md files are skill/agent definitions required to exist.
-    if is_new and not (f.startswith(".claude/") or f.startswith(".openclaw/")):
+    # where .md files are skill/agent definitions required to exist, AND
+    # the repo-root CLAUDE.md itself. install.sh's own bootstrap
+    # instructions tell every new user to `cp claude-md/CLAUDE.md.template
+    # CLAUDE.md` as their first action after installing — /clean blocking
+    # that made the harness reject the very first commit it told the user
+    # to make (issue #24). CLAUDE.md is a singular, harness-mandated
+    # config file at a fixed path, not the arbitrary doc proliferation
+    # this rule targets — unlike a new NOTES.md/REPORT.md, there is only
+    # ever one. Other canonical root docs (README.md, STATE.md, ...) are
+    # out of scope for this fix; only the reported file is exempted.
+    if is_new and f != "CLAUDE.md" and not (f.startswith(".claude/") or f.startswith(".openclaw/")):
         issues.append((
             f, "blocker",
             "NEW .md file. Repo convention: consolidate into existing docs. "
@@ -149,10 +181,7 @@ def audit_markdown(f, is_new, repo_root):
 
 
 def compute_hash():
-    ws = os.environ.get("OPENCLAW_WORKSPACE_DIR")
-    if not ws:
-        print("compute_hash: OPENCLAW_WORKSPACE_DIR unset", file=sys.stderr)
-        sys.exit(2)
+    ws = resolve_workspace_dir()
     r = run(["bash", f"{ws}/scripts/compute_clean_hash.sh"])
     return r.stdout.strip()
 
@@ -225,10 +254,7 @@ def main():
             # clean-finalize.sh so the nudge is deterministic (not
             # prose-only in SKILL.md) and the sentinel format stays in
             # one place shared with pre-commit-gate.sh.
-            ws = os.environ.get("OPENCLAW_WORKSPACE_DIR")
-            if not ws:
-                print("clean: OPENCLAW_WORKSPACE_DIR unset", file=sys.stderr)
-                sys.exit(2)
+            ws = resolve_workspace_dir()
             r = subprocess.run(
                 ["bash", f"{ws}/scripts/clean-finalize.sh", h],
                 text=True,
