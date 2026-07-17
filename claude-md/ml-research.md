@@ -23,7 +23,7 @@ Every cycle should make the next cycle better.
 
 ## Operating Doctrine (for sustained, multi-day campaigns)
 
-The `/autoresearch` skill (`project-harness/skills/autoresearch/SKILL.md`)
+The `/autoresearch` skill (`.claude/skills/autoresearch/SKILL.md`)
 encodes the loop that enforces these; both travel with the project.
 
 - **One spearhead.** Pick the single result the campaign is actually

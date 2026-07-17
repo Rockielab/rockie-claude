@@ -259,11 +259,9 @@ an afterthought.
 A novelty check done once at design time goes stale the moment the
 claim moves. Re-run it BEFORE every launch and at every CLAIM PIVOT —
 a reframed headline is a NEW claim even when the experiment underneath
-is unchanged, because the literature it now competes in has changed
-(a measured precedent: reframing a result from an access-complexity
-claim into a length-generalization claim moved it into a far more
-crowded literature than the one it was originally checked against —
-same experiment, different competing field).
+is unchanged, because a reframed claim can land in a more crowded
+literature than the one it was first checked against — same experiment,
+different competing field.
 
 The gate, triple-sworn:
 
