@@ -70,6 +70,34 @@ command -v python3 >/dev/null 2>&1 || { echo "error: python3 required" >&2; exit
   exit 2
 }
 
+# TOML parser check — scripts/budget.py needs stdlib tomllib (py3.11+),
+# the tomli backport, or its own vendored fallback parser. Unlike FTS5,
+# a missing parser isn't fatal (the vendored fallback covers the shape
+# budget.toml is documented to use) — but it's narrower than real TOML,
+# so warn loudly rather than let a user silently rely on it forever.
+# Non-fatal by design: this must not turn a working fallback into a hard
+# install failure.
+TOML_STATUS=$(python3 - <<'PYEOF'
+import sys
+if sys.version_info >= (3, 11):
+    print("stdlib")
+else:
+    try:
+        import tomli  # noqa: F401
+        print("tomli")
+    except ModuleNotFoundError:
+        print("fallback")
+PYEOF
+)
+if [ "$TOML_STATUS" = "fallback" ]; then
+  PY_VER=$(python3 -c 'import sys; print(sys.version.split()[0])')
+  echo "warning: python3 is $PY_VER (< 3.11) with no 'tomli' installed." >&2
+  echo "         budget.py will use its vendored minimal TOML reader, which only" >&2
+  echo "         understands the flat [section]/key=value shape budget.toml ships" >&2
+  echo "         with — no nested tables or arrays. For full TOML support:" >&2
+  echo "           python3 -m pip install --user tomli" >&2
+fi
+
 # ── Confirm (only if existing .claude/ and interactive) ──────────────────
 if [ -d "$TARGET_PROJECT/.claude" ] && [ "$ASSUME_YES" = "0" ]; then
   printf "[?] %s/.claude already exists. Merge non-destructively? [Y/n] " "$TARGET_PROJECT"

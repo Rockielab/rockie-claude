@@ -31,8 +31,15 @@ python3 "$ROOT/scripts/budget.py" add tool_calls 1 >/dev/null 2>&1
 python3 "$ROOT/scripts/budget.py" check
 CHECK_EXIT=$?
 
-if [ "$CHECK_EXIT" -eq 2 ]; then
-  echo "[$(date -Iseconds)] budget-gate: BLOCKED — ceiling crossed" >> "$ROOT/memory/hook.log"
+# Fail CLOSED: block on ANY non-zero exit, not just the documented
+# "ceiling crossed" code 2. budget.py previously crashed with
+# ModuleNotFoundError on Python <3.11 without tomli (system python3 on
+# stock macOS), exiting 1 — and this hook only blocked on exit==2, so a
+# broken budget.py made the gate fall through to `exit 0` and silently
+# allow every tool call, ceilings included. A budget check we can't run
+# is not the same as a budget check that passed.
+if [ "$CHECK_EXIT" -ne 0 ]; then
+  echo "[$(date -Iseconds)] budget-gate: BLOCKED — ceiling crossed or budget.py failed (exit $CHECK_EXIT)" >> "$ROOT/memory/hook.log"
   # Exit 2 tells Claude Code to block the tool call.
   exit 2
 fi
