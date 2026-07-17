@@ -33,7 +33,7 @@ SQLITE=/usr/bin/sqlite3
 ROCKIE="$(cd "$(dirname "$0")/.." && pwd)"
 WORK=$(mktemp -d -t rockie-smoke-XXXXXX)
 # Clean up any per-test tempdirs that escape the main WORK; set a broad trap.
-trap 'rm -rf "$WORK"; rm -rf /tmp/rockie-autopilot-* /tmp/rockie-migration-* /tmp/smoke-merge-* /tmp/smoke-idem-* /tmp/smoke-catalog-* /tmp/rockie-worktree-* 2>/dev/null' EXIT
+trap 'rm -rf "$WORK"; rm -rf /tmp/rockie-autopilot-* /tmp/rockie-migration-* /tmp/smoke-merge-* /tmp/smoke-idem-* /tmp/smoke-catalog-* /tmp/rockie-worktree-* /tmp/smoke-manifest-* /tmp/smoke-guard-* 2>/dev/null' EXIT
 
 PASS=0
 FAIL=0
@@ -64,7 +64,22 @@ section "setup"
 mkdir -p "$WORK/proj"
 (cd "$WORK/proj" && git init -q)
 mkdir -p "$WORK/proj/.claude"
-rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/" "$WORK/proj/.claude/" >/dev/null
+# Mirror install.sh's skills-overlay filter here too, so this scratch project
+# (reused by most of the assertions below) reflects the real installed
+# overlay: research-loop skills only, domain skills excluded per
+# install-assets/skills-manifest.json (Rockielab/rockie-claude#30).
+# Captured via command substitution (not `< <(...)`) so a nonzero exit from
+# the filter script — e.g. the bootstrap-paradox guard tripping — aborts the
+# smoke test instead of silently yielding an empty exclude list.
+if ! SKILL_OVERLAY_EXCLUDED=$(python3 "$ROCKIE/install-assets/skill_overlay_filter.py" "$ROCKIE/project-harness"); then
+  echo "${RED}✗ skill_overlay_filter.py failed — aborting${RESET}"
+  exit 1
+fi
+SKILL_OVERLAY_EXCLUDES=()
+while IFS= read -r excluded_skill; do
+  [ -n "$excluded_skill" ] && SKILL_OVERLAY_EXCLUDES+=(--exclude="/skills/${excluded_skill}/")
+done <<< "$SKILL_OVERLAY_EXCLUDED"
+rsync -a --exclude='__pycache__' "${SKILL_OVERLAY_EXCLUDES[@]}" "$ROCKIE/project-harness/" "$WORK/proj/.claude/" >/dev/null
 chmod +x "$WORK/proj/.claude/hooks/"*.sh "$WORK/proj/.claude/scripts/"*.sh "$WORK/proj/.claude/scripts/"*.py 2>/dev/null
 PROJ="$WORK/proj"
 DB="$PROJ/.claude/memory/workflow.db"
@@ -1045,6 +1060,88 @@ if grep -q 'find-skills' "$ROCKIE/claude-md/CLAUDE.md.template" \
 else
   fail "CLAUDE.md templates missing the skill-catalog on-ramp"
 fi
+
+# ── Harness overlay manifest: domain skills stay catalog-only (#30) ──────
+# Regression coverage for Rockielab/rockie-claude#30: the harness must ship
+# only the research loop; domain skills already in the platform-skills
+# catalog get pulled on demand via /find-skills instead of loading into
+# every session's context. If a domain skill ever reappears in the
+# installed overlay — a dropped manifest entry, a bypassed filter, a
+# reverted install.sh — this section fails loudly.
+section "harness overlay manifest (#30)"
+
+EXPECTED_EXCLUDED="agent-builder build-agent deploy-model diligence-deck excel finetune-model inference-engineer paper physics powerpoint"
+LOOP_SKILLS="onboard mode clean autopilot autoresearch queue-refill post-run-review deploy-team experiment budget-term-sheet gpu-spend gpu-custom gpu-custom-setup scheduled-notes propose-harness-change upstream-contribute find-skills"
+
+MANIFEST_PROJ=$(mktemp -d -t smoke-manifest-XXXXXX)
+(cd "$MANIFEST_PROJ" && git init -q)
+bash "$ROCKIE/install.sh" --project-only --yes "$MANIFEST_PROJ" >/dev/null 2>&1
+
+EXCLUDED_LEAKED=0
+for name in $EXPECTED_EXCLUDED; do
+  [ -d "$MANIFEST_PROJ/.claude/skills/$name" ] && EXCLUDED_LEAKED=1
+done
+[ "$EXCLUDED_LEAKED" = "0" ] \
+  && ok "all 10 catalog-only domain skills stayed out of the installed overlay" \
+  || fail "a catalog-only domain skill reappeared in the installed overlay"
+
+LOOP_MISSING=0
+for name in $LOOP_SKILLS; do
+  [ -d "$MANIFEST_PROJ/.claude/skills/$name" ] || LOOP_MISSING=1
+done
+[ "$LOOP_MISSING" = "0" ] \
+  && ok "all 17 loop skills present in the installed overlay" \
+  || fail "a loop skill is missing from the installed overlay"
+
+if [ -d "$MANIFEST_PROJ/.claude/skills/sota-delta" ]; then
+  ok "sota-delta stays in the overlay (not yet pushed to the platform-skills catalog)"
+else
+  fail "sota-delta missing from the overlay — it is NOT in the catalog yet; excluding it would make it unreachable"
+fi
+rm -rf "$MANIFEST_PROJ"
+
+# The manifest itself: excluded set matches the #30 list exactly (catches a
+# silently-reverted entry even before an install is run), and the
+# bootstrap-paradox / not-yet-catalogued names can never be excludable.
+if python3 - "$ROCKIE/install-assets/skills-manifest.json" "$EXPECTED_EXCLUDED" <<'PY'
+import json, sys
+manifest = json.load(open(sys.argv[1]))
+expected = set(sys.argv[2].split())
+actual = set(manifest.get("excluded_from_overlay", {}).keys())
+assert actual == expected, f"excluded_from_overlay={sorted(actual)} != expected={sorted(expected)}"
+never_exclude = set(manifest.get("never_exclude", []))
+assert {"find-skills", "onboard"} <= never_exclude, "never_exclude must cover find-skills + onboard"
+assert not (never_exclude & actual), "never_exclude names must not appear in excluded_from_overlay"
+assert "sota-delta" not in actual, "sota-delta is not in the platform-skills catalog yet; excluding it would make it unreachable"
+PY
+then
+  ok "skills-manifest.json excluded set + guards match the #30 list exactly"
+else
+  fail "skills-manifest.json drifted from the #30 exclusion list"
+fi
+
+# The filter script refuses a manifest that tries to exclude a
+# bootstrap-paradox skill, or a name with no matching skill directory, even
+# if someone hand-edits skills-manifest.json — and it must exit exactly 2
+# (a distinguishable guard-failure status), not just "nonzero." Assert the
+# real exit code for both guard paths rather than a truthy if/else, which
+# would also pass on an unrelated crash (import error, bad JSON, etc.).
+GUARD_TMP=$(mktemp -d -t smoke-guard-XXXXXX)
+mkdir -p "$GUARD_TMP/install-assets" "$GUARD_TMP/project-harness/skills/find-skills"
+
+cat > "$GUARD_TMP/install-assets/skills-manifest.json" <<'JSON'
+{"never_exclude": ["find-skills", "onboard"], "excluded_from_overlay": {"find-skills": "should never happen"}}
+JSON
+python3 "$ROCKIE/install-assets/skill_overlay_filter.py" "$GUARD_TMP/project-harness" >/dev/null 2>&1
+assert "skill_overlay_filter.py exits 2 on a bootstrap-paradox violation" "2" "$?"
+
+cat > "$GUARD_TMP/install-assets/skills-manifest.json" <<'JSON'
+{"never_exclude": ["find-skills", "onboard"], "excluded_from_overlay": {"totally-fake-skill": "typo or stale entry"}}
+JSON
+python3 "$ROCKIE/install-assets/skill_overlay_filter.py" "$GUARD_TMP/project-harness" >/dev/null 2>&1
+assert "skill_overlay_filter.py exits 2 on a nonexistent-skill-dir violation" "2" "$?"
+
+rm -rf "$GUARD_TMP"
 
 # ── Summary ──────────────────────────────────────────────────────────────
 echo ""

@@ -160,7 +160,24 @@ rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/hooks/"   "$TARGET_PRO
 rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/scripts/" "$TARGET_PROJECT/.claude/scripts/"
 rsync -a "$ROCKIE/project-harness/memory/schema.sql" "$TARGET_PROJECT/.claude/memory/schema.sql"
 rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/memory/migrations/" "$TARGET_PROJECT/.claude/memory/migrations/" 2>/dev/null || true
-rsync -a --exclude='__pycache__' "$ROCKIE/project-harness/skills/"  "$TARGET_PROJECT/.claude/skills/"
+
+# Skills overlay: ship the research loop only. install-assets/skills-manifest.json
+# is the single source of truth for which project-harness/skills/ directories are
+# EXCLUDED here — domain skills already in the platform-skills catalog stay out of
+# every session's context by default and get pulled on demand via /find-skills
+# instead (Rockielab/rockie-claude#30). skill_overlay_filter.py refuses to run
+# (nonzero exit, caught by `set -e` below) if the manifest ever tries to exclude
+# find-skills/onboard (bootstrap paradox) or a name with no matching skill dir.
+# Captured via command substitution (not `< <(...)`) so a nonzero exit from
+# the filter script — e.g. the bootstrap-paradox guard tripping — is caught
+# by `set -e` immediately, instead of silently yielding an empty exclude
+# list and falling back to "copy everything."
+SKILL_OVERLAY_EXCLUDED=$(python3 "$ROCKIE/install-assets/skill_overlay_filter.py" "$ROCKIE/project-harness")
+SKILL_OVERLAY_EXCLUDES=()
+while IFS= read -r excluded_skill; do
+  [ -n "$excluded_skill" ] && SKILL_OVERLAY_EXCLUDES+=(--exclude="/${excluded_skill}/")
+done <<< "$SKILL_OVERLAY_EXCLUDED"
+rsync -a --exclude='__pycache__' "${SKILL_OVERLAY_EXCLUDES[@]}" "$ROCKIE/project-harness/skills/"  "$TARGET_PROJECT/.claude/skills/"
 
 # Stamp a stable project_id so two checkouts of the same repo (e.g.
 # ~/proj and ~/backup/proj) don't collide on directory-basename as their
