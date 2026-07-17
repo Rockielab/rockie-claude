@@ -73,6 +73,18 @@ jobs:
           done
 
           echo ""
+          echo "── excluded from overlay (#30 — catalog-only, must NOT install) ──"
+          for name in agent-builder diligence-deck physics paper inference-engineer \
+              excel powerpoint deploy-model build-agent finetune-model; do
+            if [ -e "$SCRATCH/.claude/skills/$name" ]; then
+              echo "  ✗ LEAKED: .claude/skills/$name (should be catalog-only, see #30)"
+              exit 1
+            else
+              echo "  ✓ absent: .claude/skills/$name"
+            fi
+          done
+
+          echo ""
           echo "── installer idempotency re-run ──"
           bash install.sh --project-only --yes "$SCRATCH" >/dev/null
           SETTINGS_PATH="$SCRATCH/.claude/settings.json" python3 <<'PY'

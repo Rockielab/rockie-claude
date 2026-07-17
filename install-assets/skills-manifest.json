@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "_purpose": "Single source of truth for which project-harness/skills/ directories install.sh (and tests/smoke-test.sh) assemble into a live project's .claude/skills/ overlay. See Rockielab/rockie-claude#30: the harness should ship only the research loop; skills already published to the platform-skills catalog stay out of every session's context by default and get pulled on demand via /find-skills instead of being baked in.",
+  "never_exclude": [
+    "find-skills",
+    "onboard"
+  ],
+  "_never_exclude_reason": "Bootstrap paradox: find-skills is what teaches an agent to pull skills from the catalog, and onboard is the first-run flow that establishes the taste corpus. Neither can be pulled from the catalog because you need them BEFORE you can pull anything. skill_overlay_filter.py refuses to run if either name appears in excluded_from_overlay.",
+  "excluded_from_overlay": {
+    "agent-builder": "in platform-skills catalog (catalog_id: agent-builder) — pull via /find-skills",
+    "diligence-deck": "in platform-skills catalog (catalog_id: diligence-deck) — pull via /find-skills",
+    "physics": "in platform-skills catalog (catalog_id: physics) — pull via /find-skills",
+    "paper": "in platform-skills catalog (catalog_id: paper) — pull via /find-skills",
+    "inference-engineer": "in platform-skills catalog (catalog_id: inference-engineer) — pull via /find-skills",
+    "excel": "in platform-skills catalog (catalog_id: excel) — pull via /find-skills",
+    "powerpoint": "in platform-skills catalog (catalog_id: powerpoint) — pull via /find-skills",
+    "deploy-model": "in platform-skills catalog (catalog_id: deploy-model) — pull via /find-skills",
+    "build-agent": "in platform-skills catalog (catalog_id: build-agent) — pull via /find-skills",
+    "finetune-model": "in platform-skills catalog (catalog_id: finetune-model) — pull via /find-skills"
+  },
+  "pending_catalog_push": {
+    "sota-delta": "NOT in the platform-skills catalog as of 2026-07-16 (`rockie skill catalog --search sota-delta` returns zero results, tenant_visible_count 296). Left in the overlay on purpose — excluding it now would make it unreachable since agents can't /find-skills a skill that was never pushed. Re-evaluate once it's pushed to platform-skills."
+  }
+}
