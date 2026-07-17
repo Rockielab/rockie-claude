@@ -8,12 +8,12 @@ Three tracks, changed-files-only:
     TODO/FIXME markers, stale time-sensitive phrases
   - AI slop prompt: returned in the report for the agent to action
 
-On zero-blocker pass, hands off to
-<workspace>/scripts/clean-finalize.sh, which writes the sentinel
-<workspace>/.state/clean-ok-<hash> AND emits the upstream-contribute
-nudge to stderr. The pre-commit-gate hook reads this sentinel.
-<workspace> is self-located from this file's path (see
-resolve_workspace_dir()); no environment variable is required.
+On zero-blocker pass, hands off to <workspace>/scripts/clean-finalize.sh,
+which writes the sentinel <workspace>/.state/clean-ok-<hash> AND emits
+the upstream-contribute nudge to stderr. The pre-commit-gate hook reads
+this sentinel. <workspace> is self-located from this file's path (see
+resolve_workspace_dir()) — no environment variable is required or
+honored.
 
 Exit codes:
   0  zero blockers (sentinel written)
@@ -36,32 +36,35 @@ def run(cmd, **kw):
 
 
 def resolve_workspace_dir():
-    """Resolve the `.claude` workspace root that owns this script.
+    """Resolve the workspace root that owns this script, self-located
+    from this file's own path — never from an environment variable.
 
-    Every other hook/script in this harness self-locates
-    (`ROOT="$(cd "$(dirname "$0")/.." && pwd)"` in the bash hooks/scripts)
-    from its own file path — never from an environment variable.
-    audit.py was the one holdout that *required* OPENCLAW_WORKSPACE_DIR:
-    nothing in this repo (or an installed project) ever sets it, so a
-    plain shell made /clean impossible to unblock even by following
-    pre-commit-gate.sh's own remediation command verbatim (issue #24
-    bug 1).
+    audit.py lives at <workspace>/skills/clean/audit.py in every copy:
+    this repo's own checkout, and every deployed/overlay copy (tenant
+    runtime images, sibling harness repos) that preserves the same
+    two-level `skills/clean/` nesting under whatever directory serves
+    as that copy's workspace root. The same three-parent hop lands on
+    the right workspace root in all of them.
 
-    An env-var override is actively worse than no override: a stale
-    value (e.g. left set in the shell from a previous session, or
-    pointed at a sibling checkout) silently redirects the sentinel to
-    the WRONG `.claude/.state`. This bites hardest in a `git worktree
-    add` checkout — each worktree has its own `.claude/.state` (it's
-    gitignored, so `git worktree add` doesn't copy it) — so a leftover
-    OPENCLAW_WORKSPACE_DIR pointed at the main checkout writes the
-    sentinel there while pre-commit-gate.sh, self-locating from its own
-    `$0` inside the worktree, checks the worktree's `.state` and finds
-    nothing: /clean reports clean, the commit still blocks (issue #24
-    bug 1, worktree manifestation). So this never consults the
-    environment at all — it always self-locates, matching every bash
-    script in the harness exactly.
+    This used to read OPENCLAW_WORKSPACE_DIR from the environment and
+    exit 2 if unset — but nothing in this repo, and nothing in a
+    deployed tenant image, ever sets it. That made audit.py exit 2
+    without writing the sentinel, while pre-commit-gate.sh's own block
+    message told the user to re-run the exact command that had just
+    failed: a catch-22 that could never resolve (issue backported from
+    Rockielab/rockie-claude#29).
+
+    No env-var override is honored, on purpose: a stale value (left set
+    from a previous session, or pointed at a sibling checkout) would
+    silently redirect the sentinel to the WRONG .state dir. This bites
+    hardest in a `git worktree add` checkout — `.state/` is untracked,
+    so a worktree never inherits the main checkout's copy — so a
+    leftover override would write the sentinel into the wrong tree
+    while the commit gate, self-locating independently from its own
+    script path, checks the worktree's own (empty) .state and still
+    blocks: /clean reports clean, the commit stays blocked. Always
+    self-locating avoids that class of bug entirely.
     """
-    # audit.py lives at <workspace>/skills/clean/audit.py
     return str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
 
@@ -129,17 +132,29 @@ def audit_markdown(f, is_new, repo_root):
     issues = []
     # Block creation of new .md files — user's rule for this repo.
     # Exempt: harness infrastructure (.claude/** legacy or .openclaw/**)
-    # where .md files are skill/agent definitions required to exist, AND
-    # the repo-root CLAUDE.md itself. install.sh's own bootstrap
-    # instructions tell every new user to `cp claude-md/CLAUDE.md.template
-    # CLAUDE.md` as their first action after installing — /clean blocking
-    # that made the harness reject the very first commit it told the user
-    # to make (issue #24). CLAUDE.md is a singular, harness-mandated
-    # config file at a fixed path, not the arbitrary doc proliferation
-    # this rule targets — unlike a new NOTES.md/REPORT.md, there is only
-    # ever one. Other canonical root docs (README.md, STATE.md, ...) are
-    # out of scope for this fix; only the reported file is exempted.
-    if is_new and f != "CLAUDE.md" and not (f.startswith(".claude/") or f.startswith(".openclaw/")):
+    # where .md files are skill/agent definitions required to exist,
+    # AND the handful of root-level docs the harness itself mandates:
+    # CLAUDE.md (install.sh's own bootstrap tells every new user to
+    # `cp claude-md/CLAUDE.md.template CLAUDE.md` as their first action
+    # after installing — issue backported from Rockielab/rockie-claude#29),
+    # plus README.md/STATE.md/EXPERIMENT_LOG.md (the generated CLAUDE.md
+    # itself instructs every project to maintain STATE.md and
+    # EXPERIMENT_LOG.md at repo root, and every repo needs a README —
+    # dogfooding surfaced /clean blocking exactly those three on a new
+    # user's first real commit, forcing a CLEAN_BYPASS just to satisfy
+    # the harness's own onboarding instructions). These are singular,
+    # harness-mandated files at a fixed repo-root path, not the
+    # arbitrary doc proliferation this rule targets — unlike a new
+    # NOTES.md/REPORT.md, or any .md nested in a subdirectory, there is
+    # only ever one of each, always at repo root. The exemption is
+    # root-only by construction: a nested docs/STATE.md or docs/README.md
+    # doesn't match the bare filename and still blocks.
+    ROOT_MANDATED_MD = {"CLAUDE.md", "README.md", "STATE.md", "EXPERIMENT_LOG.md"}
+    if (
+        is_new
+        and f not in ROOT_MANDATED_MD
+        and not (f.startswith(".claude/") or f.startswith(".openclaw/"))
+    ):
         issues.append((
             f, "blocker",
             "NEW .md file. Repo convention: consolidate into existing docs. "
@@ -263,9 +278,18 @@ def main():
             # prose-only in SKILL.md) and the sentinel format stays in
             # one place shared with pre-commit-gate.sh.
             ws = resolve_workspace_dir()
+            # Forward our self-located workspace value to clean-finalize.sh
+            # via the environment too. Harmless if the target script
+            # ignores it (self-locating scripts do); required if it
+            # doesn't (some deployed clean-finalize.sh copies still read
+            # OPENCLAW_WORKSPACE_DIR from their own environment). Setting
+            # it here rather than requiring the caller's shell to have it
+            # also overrides any stale inherited value, so the same
+            # worktree-safety guarantee holds end to end either way.
             r = subprocess.run(
                 ["bash", f"{ws}/scripts/clean-finalize.sh", h],
                 text=True,
+                env={**os.environ, "OPENCLAW_WORKSPACE_DIR": ws},
             )
             if r.returncode != 0:
                 print(f"\n✗ clean-finalize.sh failed (exit {r.returncode})")
